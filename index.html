@@ -1,894 +1,1313 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta name="google-adsense-account" content="ca-pub-6432140563201928">
-    <meta name="google-site-verification" content="gg96OzGmVjZVidOQUeSuOH3GDAAMqVZDnBhnopneRYI" />
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Leofame Pro</title>
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6432140563201928"
-     crossorigin="anonymous"></script>
-    <!-- Google Fonts & FontAwesome Icons -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Anatomi3D - 3D Interactive Human Anatomy Explorer</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+
+  <!-- Three.js & OrbitControls -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Outfit', 'sans-serif'],
+            display: ['Space Grotesk', 'sans-serif'],
+          },
+          colors: {
+            cyanGlow: '#00f2fe',
+            pinkGlow: '#4facfe',
+            darkBg: '#0b0f19',
+            glassPanel: 'rgba(15, 23, 42, 0.75)',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      font-family: 'Outfit', sans-serif;
+      background-color: #0b0f19;
+      color: #f8fafc;
+      overflow: hidden;
+    }
     
-    <style>
-        :root {
-            --bg-dark: #0a051b;
-            --card-bg: rgba(25, 18, 52, 0.65);
-            --accent-primary: #8a2be2;
-            --accent-glow: #00f2fe;
-            --text-main: #ffffff;
-            --text-muted: #a29bfe;
-            --success: #00e676;
-            --warning: #ffea00;
-        }
+    .glass-panel {
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Poppins', sans-serif;
-        }
+    .glass-card {
+      background: rgba(30, 41, 59, 0.6);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
 
-        body {
-            background-color: var(--bg-dark);
-            color: var(--text-main);
-            overflow-x: hidden;
-            min-height: 100vh;
-        }
+    .glass-card:hover {
+      border-color: rgba(56, 189, 248, 0.4);
+      box-shadow: 0 0 20px rgba(56, 189, 248, 0.15);
+    }
 
-        /* --- HIGH PERFORMANCE AMBIENT VIDEO/DYNAMIC BACKGROUND --- */
-        .video-bg-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -2;
-            overflow: hidden;
-            background: linear-gradient(135deg, #0f0c20 0%, #151035 50%, #060411 100%);
-        }
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(15, 23, 42, 0.6);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(56, 189, 248, 0.3);
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(56, 189, 248, 0.6);
+    }
 
-        /* Ambient moving nodes acting like premium compression abstract video loops */
-        .video-bg-container::before {
-            content: '';
-            position: absolute;
-            width: 150%;
-            height: 150%;
-            top: -25%;
-            left: -25%;
-            background: radial-gradient(circle, rgba(138,43,226,0.15) 0%, transparent 60%),
-                        radial-gradient(circle, rgba(0,242,254,0.1) 0%, transparent 50%);
-            animation: backgroundFlow 25s infinite linear;
-        }
+    /* Glowing Pulse effect for Heart */
+    @keyframes heartPulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.08); }
+    }
 
-        @keyframes backgroundFlow {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        /* HTML5 Real Video Integration Placeholder styles */
-        .real-video-bg {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            min-width: 100%;
-            min-height: 100%;
-            width: auto;
-            height: auto;
-            transform: translate(-50%, -50%);
-            object-fit: cover;
-            opacity: 0.15; /* Keeps text contrast high */
-            z-index: -1;
-        }
-
-        .overlay-mask {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(to bottom, rgba(10,5,27,0.3), rgba(10,5,27,0.85));
-            z-index: -1;
-        }
-
-        /* --- GLOBAL NAVIGATION HEADER --- */
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px 5%;
-            background: rgba(10, 5, 27, 0.8);
-            backdrop-filter: blur(10px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-
-        .logo {
-            font-size: 24px;
-            font-weight: 700;
-            letter-spacing: 1px;
-            background: linear-gradient(to right, #fff, var(--accent-glow));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .nav-controls {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        select.lang-switcher {
-            background: rgba(255, 255, 255, 0.07);
-            color: #fff;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            padding: 8px 12px;
-            border-radius: 6px;
-            cursor: pointer;
-            outline: none;
-            font-weight: 600;
-        }
-
-        select.lang-switcher option {
-            background: #151035;
-            color: #fff;
-        }
-
-        .btn-role {
-            background: transparent;
-            border: 1px solid var(--accent-glow);
-            color: var(--accent-glow);
-            padding: 8px 16px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s;
-        }
-
-        .btn-role:hover {
-            background: var(--accent-glow);
-            color: #000;
-            box-shadow: 0 0 15px var(--accent-glow);
-        }
-
-        /* --- LAYOUT WRAPPERS & VIEWS --- */
-        .container {
-            max-width: 1200px;
-            margin: 40px auto;
-            padding: 0 20px;
-        }
-
-        .view-panel {
-            display: none;
-            animation: fadeIn 0.4s ease-in-out forwards;
-        }
-
-        .view-panel.active {
-            display: block;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* --- AUTH ENTICATION INTERFACE --- */
-        .auth-card {
-            background: var(--card-bg);
-            backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            max-width: 450px;
-            margin: 60px auto;
-            padding: 40px;
-            border-radius: 16px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
-            text-align: center;
-        }
-
-        .auth-card h2 {
-            margin-bottom: 25px;
-            font-size: 28px;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-            text-align: left;
-        }
-
-        .form-group label {
-            display: block;
-            font-size: 14px;
-            margin-bottom: 8px;
-            color: var(--text-muted);
-        }
-
-        .form-group input {
-            width: 100%;
-            padding: 12px 16px;
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 8px;
-            color: #fff;
-            font-size: 15px;
-            outline: none;
-            transition: border 0.3s;
-        }
-
-        .form-group input:focus {
-            border-color: var(--accent-primary);
-            box-shadow: 0 0 8px rgba(138,43,226,0.3);
-        }
-
-        .primary-btn {
-            width: 100%;
-            padding: 14px;
-            background: linear-gradient(90deg, var(--accent-primary), #6c5ce7);
-            border: none;
-            border-radius: 8px;
-            color: white;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(138,43,226,0.4);
-            transition: transform 0.2s, opacity 0.2s;
-        }
-
-        .primary-btn:hover {
-            transform: translateY(-2px);
-            opacity: 0.95;
-        }
-
-        .auth-toggle-link {
-            margin-top: 20px;
-            font-size: 14px;
-            color: var(--text-muted);
-            cursor: pointer;
-        }
-
-        .auth-toggle-link span {
-            color: var(--accent-glow);
-            text-decoration: underline;
-        }
-
-        /* --- USER MAIN ORDER TERMINAL --- */
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 30px;
-        }
-
-        @media (max-width: 900px) {
-            .dashboard-grid { grid-template-columns: 1fr; }
-        }
-
-        .system-card {
-            background: var(--card-bg);
-            backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 16px;
-            padding: 30px;
-        }
-
-        .system-card h3 {
-            margin-bottom: 20px;
-            font-size: 22px;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            padding-bottom: 10px;
-        }
-
-        /* 1K rule verification badge rules */
-        .tier-badge {
-            display: inline-block;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 700;
-            margin-bottom: 20px;
-            text-transform: uppercase;
-        }
-
-        .badge-restricted {
-            background: rgba(255, 234, 0, 0.15);
-            color: var(--warning);
-            border: 1px solid var(--warning);
-        }
-
-        .badge-unlimited {
-            background: rgba(0, 230, 118, 0.15);
-            color: var(--success);
-            border: 1px solid var(--success);
-        }
-
-        .service-selectors {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-
-        .service-btn {
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.1);
-            padding: 15px 5px;
-            text-align: center;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .service-btn i {
-            display: block;
-            font-size: 20px;
-            margin-bottom: 8px;
-        }
-
-        .service-btn.active {
-            background: var(--accent-primary);
-            border-color: var(--accent-glow);
-            box-shadow: 0 0 10px rgba(138,43,226,0.5);
-        }
-
-        .status-msg {
-            background: rgba(255,255,255,0.05);
-            padding: 12px;
-            border-radius: 8px;
-            font-size: 13px;
-            line-height: 1.5;
-            margin-bottom: 20px;
-            border-left: 4px solid var(--accent-glow);
-        }
-
-        /* --- ADMIN COMMAND PANEL STYLES --- */
-        .admin-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-        }
-
-        .admin-stats {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .stat-box {
-            background: rgba(255,255,255,0.03);
-            border: 1px solid rgba(255,255,255,0.06);
-            padding: 20px;
-            border-radius: 10px;
-            text-align: center;
-        }
-
-        .stat-box span {
-            display: block;
-            font-size: 28px;
-            font-weight: 700;
-            color: var(--accent-glow);
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-            font-size: 14px;
-        }
-
-        th, td {
-            padding: 12px 15px;
-            text-align: left;
-            border-bottom: 1px solid rgba(255,255,255,0.06);
-        }
-
-        th {
-            background: rgba(255,255,255,0.05);
-            color: var(--text-muted);
-        }
-
-        .badge-table {
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-size: 11px;
-            font-weight: 600;
-        }
- </script>
+    .pulse-animation {
+      animation: heartPulse 1.2s infinite ease-in-out;
+    }
+  </style>
 </head>
-<body>
 
-    <!-- VIDEO BACKGROUND ELEMENT LOOP -->
-    <div class="video-bg-container">
-        <!-- Pro-tip: Replace the src below with your production server mp4 asset -->
-        <video class="real-video-bg" autoplay loop muted playsinline>
-            <source src="https://assets.mixkit.co/videos/preview/mixkit-abstract-laser-lights-background-32155-large.mp4" type="video/mp4">
-        </video>
-        <div class="overlay-mask"></div>
-    </div>
-        
+<body class="h-screen w-screen relative flex flex-col select-none overflow-hidden">
 
-    <!-- MAIN HEADER -->
-    <header>
-        <div class="logo"><i class="fa-solid fa-bolt"></i> LEOFAME PRO</div>
-        <div class="nav-controls">
-            <!-- Language Switcher Core -->
-            <select class="lang-switcher" id="langSelect" onchange="changeLanguage(this.value)">
-                <option value="en">English</option>
-                <option value="hi">हिन्दी (Hindi)</option>
-                <option value="es">Español</option>
-            </select>
-            <button class="btn-role" id="roleToggleBtn" onclick="toggleRoleView()">Switch to Admin</button id="logoutBtn" style="display:none; border-color: #ff3333; color: #ff3333;" onclick="logoutUser()">Logout</button>
-        </div>
-    </header>
-
-    <div class="container">
-
-        <!-- VIEW 1: AUTHENTICATION FORM PANEL -->
-        <div id="authView" class="view-panel active">
-            <div class="auth-card">
-                <h2 id="authTitle">Sign In</h2>
-                <form id="authForm" onsubmit="handleAuthSubmit(event)">
-                    <div class="form-group">
-                        <label id="lblUser">Username</label>
-                        <input type="text" id="authUsername" required placeholder="Enter username">
-                    </div>
-                    <div class="form-group" id="emailGroup" style="display: none;">
-                        <label id="lblEmail">Email Address</label>
-                        <input type="email" id="authEmail" placeholder="name@domain.com">
-                    </div>
-                    <div class="form-group">
-                        <label id="lblPass">Password</label>
-                        <input type="password" id="authPassword" required placeholder="••••••••">
-                    </div>
-                    <button type="submit" class="primary-btn" id="btnSubmitAuth">Login</button>
-                </form>
-                <div class="auth-toggle-link" id="authToggleText" onclick="toggleAuthFormMode()">
-                    Don't have an account? <span>Sign Up</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- VIEW 2: CLIENT ORDER INTERFACE -->
-        <div id="clientView" class="view-panel">
-            <div class="dashboard-grid">
-                
-                <!-- Place New Order Engine Card -->
-                <div class="system-card">
-                    <span id="tierBadge" class="tier-badge badge-restricted">First Order: Locked Tier</span>
-                    <h3 id="panelOrderTitle">Configure Growth Order</h3>
-                    
-                    <div class="status-msg" id="limitMessage">
-                        Welcome offer! Your very first setup is strictly calibrated to exactly 1,000 counts to test our real-time synchronization.
-                    </div>
-
-                    <div class="form-group">
-                        <label id="lblSelectService">1. Select Target KPI Channel</label>
-                        <div class="service-selectors">
-                            <div class="service-btn active" onclick="setServiceType('views', this)">
-                                <i class="fa-solid fa-eye"></i><span class="srv-txt">Views</span>
-                            </div>
-                            <div class="service-btn" onclick="setServiceType('likes', this)">
-                                <i class="fa-solid fa-heart"></i><span class="srv-txt">Likes</span>
-                            </div>
-                            <div class="service-btn" onclick="setServiceType('shares', this)">
-                                <i class="fa-solid fa-share"></i><span class="srv-txt">Shares</span>
-                            </div>
-                            <div class="service-btn" onclick="setServiceType('saves', this)">
-                                <i class="fa-solid fa-bookmark"></i><span class="srv-txt">Saved</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <form onsubmit="handleCreateOrder(event)">
-                        <div class="form-group">
-                            <label id="lblTargetUrl">2. Target Link / URL</label>
-                            <input type="url" id="targetUrl" required placeholder="https://instagram.com/p/... or youtube link">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label id="lblQuantity">3. Metric Quantity</label>
-                            <input type="number" id="orderQuantity" readonly value="1000">
-                        </div>
-
-                        <button type="submit" class="primary-btn" id="btnPlaceOrder">Deploy Infrastructure Vector</button>
-                    </form>
-                </div>
-
-                <!-- Live Client Metrics History Card -->
-                <div class="system-card">
-                    <h3 id="panelHistoryTitle">Your Operational Logs</h3>
-                    <div style="overflow-x: auto;">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th id="thService">Service</th>
-                                    <th id="thQty">Volume</th>
-                                    <th id="thTarget">Target URL</th>
-                                    <th id="thStatus">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody id="clientOrderHistoryTable">
-                                <!-- Dynamic Injection via Engine -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-            </div>
-        </div>
-
-        <!-- VIEW 3: SYSTEM ADMINISTRATIVE HEADQUARTERS -->
-        <div id="adminView" class="view-panel">
-            <div class="system-card">
-                <div class="admin-header">
-                    <h2>Global Analytics & Admin Overrides</h2>
-                    <button class="btn-role" style="border-color: var(--warning); color:var(--warning)" onclick="resetGlobalMockData()">Reset Database State</button>
-                </div>
-
-                <div class="admin-stats">
-                    <div class="stat-box">
-                        <label>Active Database Nodes</label>
-                        <span id="statUsers">1</span>
-                    </div>
-                    <div class="stat-box">
-                        <label>Total Global Dispatches</label>
-                        <span id="statOrders">3</span>
-                    </div>
-                    <div class="stat-box">
-                        <label>Platform Processing Mode</label>
-                        <span style="font-size:18px; color:var(--success)">AUTO-RELIANT</span>
-                    </div>
-                </div>
-
-                <h3>Live Enterprise Ledger Accounts</h3>
-                <div style="overflow-x: auto;">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>User Account</th>
-                                <th>Service Strategy</th>
-                                <th>Volume Allocated</th>
-                                <th>Target Route</th>
-                                <th>System Signature</th>
-                            </tr>
-                        </thead>
-                        <tbody id="adminGlobalTable">
-                            <!-- Dynamic Injection via Engine -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
+  <!-- Top Navigation Bar -->
+  <header class="h-16 w-full glass-panel z-30 px-6 flex items-center justify-between border-b border-slate-800">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center text-white shadow-lg shadow-cyan-500/30">
+        <i class="fa-solid fa-cube text-xl"></i>
+      </div>
+      <div>
+        <h1 class="text-xl font-bold font-display tracking-wide bg-gradient-to-r from-cyan-400 via-blue-400 to-indigo-300 bg-clip-text text-transparent">
+          Anatomi3D
+        </h1>
+        <p class="text-xs text-slate-400 font-medium" id="header-subtitle">3D Interactive Human Anatomy Explorer</p>
+      </div>
     </div>
 
-    <!-- Leofame-pro Ad -->
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6432140563201928"
-         crossorigin="anonymous"></script>
-    <ins class="adsbygoogle"
-         style="display:block"
-         data-ad-client="ca-pub-6432140563201928"
-         data-ad-slot="8528425927"
-         data-ad-format="auto"
-         data-full-width-responsive="true"></ins>
-    <script>
-         (adsbygoogle = window.adsbygoogle || []).push({});
-    </script>
+    <!-- Mode Switcher Tabs -->
+    <div class="hidden md:flex bg-slate-900/80 p-1 rounded-xl border border-slate-800 gap-1">
+      <button id="tab-3d" onclick="switchView('3d')" class="px-4 py-1.5 text-xs font-semibold rounded-lg bg-cyan-500 text-slate-950 shadow-md transition-all flex items-center gap-2">
+        <i class="fa-solid fa-vr-cardboard"></i>
+        <span data-key="tab3d">3D Explorer</span>
+      </button>
+      <button id="tab-quiz" onclick="switchView('quiz')" class="px-4 py-1.5 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition-all flex items-center gap-2">
+        <i class="fa-solid fa-graduation-cap"></i>
+        <span data-key="tabQuiz">Quiz Mode</span>
+      </button>
+    </div>
 
-    <!-- APPLICATION CONTROL INFRASTRUCTURE -->
-    <script>
-    
-    <!-- APPLICATION CONTROL INFRASTRUCTURE (JAVASCRIPT) -->
-    <script>
-        // --- 1. LOCAL DICTIONARIES AND DATA STATE MOCK ---
-        const dictionary = {
-            en: {
-                authTitleIn: "Sign In", authTitleUp: "Create Enterprise Account",
-                lblUser: "Username", lblEmail: "Email Address", lblPass: "Password",
-                btnLogin: "Login Account", btnSignup: "Register Now",
-                toggleToUp: "Don't have an account? Sign Up", toggleToIn: "Already verified? Login",
-                badgeRestricted: "First Order: Locked Tier (1K Limit)", badgeUnlimited: "Premium Status: Unlimited Enabled",
-                msgFirst: "Welcome offer! Your very first setup is strictly calibrated to exactly 1,000 counts to test our real-time synchronization.",
-                msgPremium: "Premium account configuration unlocked. You can now request unlimited scaling streams.",
-                lblService: "1. Select Target KPI Channel", lblTarget: "2. Target Link / URL", lblQty: "3. Metric Quantity",
-                btnDeploy: "Deploy Growth Vector", panelHistory: "Your Operational Logs", panelOrder: "Configure Growth Order",
-                thSrv: "Service", thVol: "Volume", thTgt: "Target URL", thStat: "Status"
-            },
-            hi: {
-                authTitleIn: "लॉगिन करें", authTitleUp: "नया अकाउंट बनाएं",
-                lblUser: "यूजरनेम", lblEmail: "ईमेल एड्रेस", lblPass: "पासवर्ड",
-                btnLogin: "अकाउंट लॉगिन करें", btnSignup: "अभी रजिस्टर करें",
-                toggleToUp: "अकाउंट नहीं है? साइन अप करें", toggleToIn: "अकाउंट है? लॉगिन करें",
-                badgeRestricted: "पहला ऑर्डर: 1K सीमित मोड", badgeUnlimited: "प्रीमियम स्थिति: असीमित मोड सक्रिय",
-                msgFirst: "स्वागत ऑफर! वास्तविक समय सिंक्रनाइज़ेशन का परीक्षण करने के लिए आपका पहला ऑर्डर ठीक 1,000 तक सीमित है।",
-                msgPremium: "प्रीमियम अकाउंट अनलॉक हो गया है। अब आप असीमित मात्रा में ऑर्डर जनरेट कर सकते हैं।",
-                lblService: "1. चैनल प्रकार चुनें", lblTarget: "2. टारगेट लिंक / URL", lblQty: "3. मात्रा",
-                btnDeploy: "ऑर्डर सबमिट करें", panelHistory: "आपके ऑर्डर लॉग्स", panelOrder: "ऑर्डर कॉन्फ़िगर करें",
-                thSrv: "सर्विस", thVol: "मात्रा", thTgt: "लिंक", thStat: "स्थिति"
-            },
-            es: {
-                authTitleIn: "Iniciar Sesión", authTitleUp: "Crear Cuenta",
-                lblUser: "Usuario", lblEmail: "Correo Electrónico", lblPass: "Contraseña",
-                btnLogin: "Ingresar", btnSignup: "Registrarse Ahora",
-                toggleToUp: "¿No tienes cuenta? Regístrate", toggleToIn: "¿Ya tienes cuenta? Conéctate",
-                badgeRestricted: "Primer Pedido: Bloqueado a 1K", badgeUnlimited: "Estado Premium: Ilimitado Activo",
-                msgFirst: "¡Oferta de bienvenida! Su primer pedido está estrictamente limitado a exactamente 1,000 unidades para validar el canal.",
-                msgPremium: "Configuración Premium desbloqueada. Ahora puede solicitar flujos de escalado ilimitados.",
-                lblService: "1. Seleccionar Canal KPI", lblTarget: "2. Enlace / URL de Destino", lblQty: "3. Cantidad Métrica",
-                btnDeploy: "Desplegar Vector de Crecimiento", panelHistory: "Registros Operativos", panelOrder: "Configurar Pedido",
-                thSrv: "Servicio", thVol: "Volumen", thTgt: "Enlace", thStat: "Estado"
-            }
-        };
+    <!-- Right Controls: Language Switcher & Info -->
+    <div class="flex items-center gap-3">
+      <!-- Language Switcher Button -->
+      <div class="bg-slate-900/90 p-1 rounded-xl border border-slate-800 flex items-center gap-1">
+        <button id="lang-hinglish" onclick="setLanguage('hinglish')" class="px-3 py-1 text-xs font-bold rounded-lg bg-slate-800 text-cyan-400 border border-cyan-500/30 transition-all flex items-center gap-1.5">
+          <span>🇮🇳</span> Hinglish
+        </button>
+        <button id="lang-en" onclick="setLanguage('en')" class="px-3 py-1 text-xs font-bold rounded-lg text-slate-400 hover:text-slate-200 transition-all flex items-center gap-1.5">
+          <span>🇬🇧</span> English
+        </button>
+      </div>
 
-        // Simulated In-Memory Global Stateful Store
-        let state = {
-            currentLang: 'en',
-            currentAppView: 'auth', // 'auth', 'client', 'admin'
-            authIsSignup: false,
-            loggedInUser: null,
-            selectedService: 'views',
-            usersDatabase: {
-                'demo': { username: 'demo', ordersCount: 0 }
-            },
-            ordersDatabase: [
-                { user: 'system_test', service: 'likes', quantity: 1000, target: 'https://instagram.com/p/test', status: 'Delivered' },
-                { user: 'enterprise_user', service: 'views', quantity: 250000, target: 'https://youtube.com/watch?v=test', status: 'Processing' }
-            ]
-        };
+      <!-- Reset Camera View Button -->
+      <button onclick="resetCameraView()" class="w-9 h-9 rounded-xl bg-slate-800/80 hover:bg-slate-700 border border-slate-700/50 flex items-center justify-center text-slate-300 hover:text-white transition-all" title="Reset View">
+        <i class="fa-solid fa-arrows-to-dot text-sm"></i>
+      </button>
+    </div>
+  </header>
 
-        // --- 2. THE ENGINE: LOGIC IMPLEMENTATION CONTROL ---
+  <!-- Main Content Layout -->
+  <main class="flex-1 w-full relative flex overflow-hidden">
+
+    <!-- 3D Canvas View Container -->
+    <div id="canvas-container" class="absolute inset-0 w-full h-full bg-slate-950">
+      <!-- WebGL Canvas rendered by Three.js -->
+    </div>
+
+    <!-- Left Floating Controls & Organ Search Panel -->
+    <aside id="sidebar-panel" class="absolute left-4 top-4 bottom-4 w-80 glass-panel rounded-2xl z-20 flex flex-col p-4 shadow-2xl transition-all duration-300 transform">
+      
+      <!-- Search Box -->
+      <div class="relative mb-4">
+        <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+        <input type="text" id="organ-search" oninput="handleSearch(this.value)" placeholder="Organ search karein (Heart, Brain)..." 
+               class="w-full pl-9 pr-8 py-2 bg-slate-900/90 border border-slate-700/60 rounded-xl text-xs text-slate-200 focus:outline-none focus:border-cyan-400 transition-all placeholder:text-slate-500">
+        <button id="search-clear" onclick="clearSearch()" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white text-xs">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Quick Organ Selector List -->
+      <div class="mb-3 flex items-center justify-between">
+        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider" data-key="selectOrganTitle">Select Organ</span>
+        <span class="text-[10px] bg-slate-800 text-cyan-400 px-2 py-0.5 rounded-full border border-cyan-500/20" id="organ-count">5 Organs</span>
+      </div>
+
+      <div class="flex-1 overflow-y-auto pr-1 space-y-2" id="organ-list">
+        <!-- Dynamically Populated Organ Cards -->
+      </div>
+
+      <!-- Simulation Controller Deck -->
+      <div class="mt-4 pt-3 border-t border-slate-800/80 bg-slate-900/40 p-3 rounded-xl border border-slate-800">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+            <i class="fa-solid fa-sliders text-cyan-400"></i>
+            <span data-key="simControls">Simulation Speed</span>
+          </span>
+          <button id="toggle-sim-btn" onclick="toggleSimulation()" class="text-xs text-cyan-400 hover:text-cyan-300 font-semibold flex items-center gap-1">
+            <i class="fa-solid fa-pause text-[10px]" id="sim-icon"></i> <span id="sim-text">Pause</span>
+          </button>
+        </div>
+
+        <div class="flex items-center justify-between gap-2 bg-slate-950/80 p-1.5 rounded-lg border border-slate-800">
+          <button onclick="setSimSpeed(0.5)" id="speed-05" class="flex-1 py-1 text-[10px] font-bold rounded bg-slate-800 text-slate-300 hover:bg-slate-700 transition-all">0.5x</button>
+          <button onclick="setSimSpeed(1.0)" id="speed-10" class="flex-1 py-1 text-[10px] font-bold rounded bg-cyan-500 text-slate-950 font-bold shadow transition-all">1.0x</button>
+          <button onclick="setSimSpeed(1.8)" id="speed-18" class="flex-1 py-1 text-[10px] font-bold rounded bg-slate-800 text-slate-300 hover:bg-slate-700 transition-all">1.8x</button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Right Floating Organ Detail Modal / Drawer -->
+    <div id="organ-detail-card" class="absolute right-4 top-4 bottom-4 w-96 glass-panel rounded-2xl z-20 flex flex-col p-5 shadow-2xl transition-all duration-300 opacity-0 pointer-events-none transform translate-x-8">
+      <!-- Close Button -->
+      <button onclick="closeOrganDetail()" class="absolute top-4 right-4 w-8 h-8 rounded-xl bg-slate-800/80 hover:bg-slate-700 border border-slate-700 flex items-center justify-center text-slate-400 hover:text-white transition-all">
+        <i class="fa-solid fa-xmark text-sm"></i>
+      </button>
+
+      <!-- Organ Header Badge -->
+      <div class="flex items-center gap-3 mb-4">
+        <div id="organ-icon-bg" class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center text-white text-xl shadow-lg">
+          <i id="organ-icon" class="fa-solid fa-heart-pulse"></i>
+        </div>
+        <div>
+          <h2 id="organ-title" class="text-xl font-bold font-display text-white">Heart (Dil)</h2>
+          <p id="organ-category" class="text-xs text-cyan-400 font-medium">Circulatory System</p>
+        </div>
+      </div>
+
+      <!-- Scrollable Details -->
+      <div class="flex-1 overflow-y-auto pr-1 space-y-4">
         
-        function changeLanguage(langKey) {
-            state.currentLang = langKey;
-            const t = dictionary[langKey];
-            
-            // Map Static Content Elements
-            document.getElementById('lblUser').innerText = t.lblUser;
-            document.getElementById('lblPass').innerText = t.lblPass;
-            document.getElementById('lblEmail').innerText = t.lblEmail;
-            
-            // Sync current dynamic texts depending on secondary parameters
-            if(!state.authIsSignup) {
-                document.getElementById('authTitle').innerText = t.authTitleIn;
-                document.getElementById('btnSubmitAuth').innerText = t.btnLogin;
-                document.getElementById('authToggleText').innerHTML = t.toggleToUp;
-            } else {
-                document.getElementById('authTitle').innerText = t.authTitleUp;
-                document.getElementById('btnSubmitAuth').innerText = t.btnSignup;
-                document.getElementById('authToggleText').innerHTML = t.toggleToIn;
-            }
+        <!-- Live Animation Status Banner -->
+        <div class="bg-slate-900/80 p-3 rounded-xl border border-cyan-500/20 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="relative flex h-2.5 w-2.5">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-cyan-500"></span>
+            </span>
+            <span class="text-xs font-semibold text-slate-300" data-key="activeSim">Active Simulation</span>
+          </div>
+          <span id="organ-sim-status" class="text-xs font-bold text-cyan-300 bg-cyan-950 px-2 py-0.5 rounded border border-cyan-800">72 BPM Rhythm</span>
+        </div>
 
-            document.getElementById('panelOrderTitle').innerText = t.panelOrder;
-            document.getElementById('lblSelectService').innerText = t.lblService;
-            document.getElementById('lblTargetUrl').innerText = t.lblTarget;
-            document.getElementById('lblQuantity').innerText = t.lblQty;
-            document.getElementById('btnPlaceOrder').innerText = t.btnDeploy;
-            document.getElementById('panelHistoryTitle').innerText = t.panelHistory;
-            
-            document.getElementById('thService').innerText = t.thSrv;
-            document.getElementById('thQty').innerText = t.thVol;
-            document.getElementById('thTarget').innerText = t.thTgt;
-            document.getElementById('thStatus').innerText = t.thStat;
+        <!-- Description Paragraph -->
+        <div>
+          <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1" data-key="aboutOrgan">How it Works (Kaam Kaise Karta Hai)</h3>
+          <p id="organ-desc" class="text-xs text-slate-300 leading-relaxed bg-slate-900/50 p-3 rounded-xl border border-slate-800/80">
+            Organ description text will appear here.
+          </p>
+        </div>
 
-            // Trigger dynamic re-renders of the state badges
-            evaluateUserOrderConstraints();
+        <!-- Key Metrics Grid -->
+        <div>
+          <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2" data-key="keyStats">Key Metrics & Stats</h3>
+          <div id="organ-stats-grid" class="grid grid-cols-2 gap-2">
+            <!-- Dynamic Metric Boxes -->
+          </div>
+        </div>
+
+        <!-- Did You Know / Fun Fact -->
+        <div class="bg-gradient-to-br from-indigo-950/60 to-purple-950/60 p-3.5 rounded-xl border border-indigo-500/30">
+          <div class="flex items-center gap-2 text-indigo-300 font-bold text-xs mb-1">
+            <i class="fa-solid fa-lightbulb text-amber-400"></i>
+            <span data-key="funFactTitle">Did You Know? (Kya Aap Jane Hain?)</span>
+          </div>
+          <p id="organ-fact" class="text-xs text-slate-200 leading-relaxed">
+            Interesting fact about this organ will be displayed here.
+          </p>
+        </div>
+
+      </div>
+
+      <!-- Action Button: Quiz on this Organ -->
+      <div class="pt-3 border-t border-slate-800 mt-2">
+        <button onclick="startSpecificQuiz()" class="w-full py-2.5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold text-xs rounded-xl shadow-lg shadow-cyan-500/20 transition-all flex items-center justify-center gap-2">
+          <i class="fa-solid fa-circle-question text-sm"></i>
+          <span data-key="testKnowledgeBtn">Test Knowledge on this Organ</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Floating 3D Interaction Guide Overlay -->
+    <div class="absolute bottom-4 left-1/2 -translate-x-1/2 glass-panel px-4 py-2 rounded-full z-10 flex items-center gap-4 text-xs text-slate-300 border border-slate-800 shadow-xl pointer-events-none">
+      <div class="flex items-center gap-1.5">
+        <i class="fa-solid fa-computer-mouse text-cyan-400"></i>
+        <span data-key="guideRotate">Left Click + Drag: Rotate</span>
+      </div>
+      <div class="w-px h-3 bg-slate-700"></div>
+      <div class="flex items-center gap-1.5">
+        <i class="fa-solid fa-arrows-up-down text-cyan-400"></i>
+        <span data-key="guideZoom">Scroll: Zoom</span>
+      </div>
+      <div class="w-px h-3 bg-slate-700"></div>
+      <div class="flex items-center gap-1.5">
+        <i class="fa-solid fa-hand-pointer text-cyan-400"></i>
+        <span data-key="guideClick">Click Organ to Inspect</span>
+      </div>
+    </div>
+
+    <!-- Quiz Mode Overlay Overlay Screen -->
+    <div id="quiz-view" class="absolute inset-0 z-40 glass-panel flex items-center justify-center p-6 hidden transition-all duration-300">
+      <div class="w-full max-w-xl bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl relative flex flex-col">
+        
+        <!-- Quiz Header -->
+        <div class="flex items-center justify-between pb-4 border-b border-slate-800 mb-6">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center text-white">
+              <i class="fa-solid fa-brain text-lg"></i>
+            </div>
+            <div>
+              <h2 class="text-lg font-bold font-display text-white" id="quiz-header-title">Anatomy Mastery Quiz</h2>
+              <p class="text-xs text-slate-400" id="quiz-progress-text">Question 1 of 5</p>
+            </div>
+          </div>
+
+          <button onclick="switchView('3d')" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <!-- Question Box -->
+        <div id="quiz-question-container" class="space-y-4">
+          <p id="quiz-question" class="text-sm md:text-base font-semibold text-slate-100 leading-snug">
+            Question prompt will appear here?
+          </p>
+
+          <!-- Options Grid -->
+          <div id="quiz-options" class="space-y-2.5">
+            <!-- Dynamic Options -->
+          </div>
+
+          <!-- Explanation Box -->
+          <div id="quiz-explanation" class="hidden p-3 bg-slate-800/80 border border-slate-700 rounded-xl text-xs text-slate-300 leading-relaxed">
+            <span class="font-bold text-cyan-400 block mb-1">Explanation / Samjhein:</span>
+            <span id="explanation-text">Explanation text goes here.</span>
+          </div>
+
+          <!-- Next Button -->
+          <div class="flex justify-end pt-2">
+            <button id="quiz-next-btn" onclick="nextQuestion()" class="hidden px-5 py-2 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs rounded-xl transition-all flex items-center gap-2">
+              <span data-key="nextQuestion">Next Question</span>
+              <i class="fa-solid fa-arrow-right"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Quiz Completed Result Screen -->
+        <div id="quiz-result-container" class="hidden text-center py-6 space-y-4">
+          <div class="w-20 h-20 rounded-full bg-cyan-500/10 border-2 border-cyan-400 mx-auto flex items-center justify-center text-cyan-400 text-3xl">
+            <i class="fa-solid fa-trophy"></i>
+          </div>
+          <h3 class="text-xl font-bold font-display text-white" data-key="quizDoneTitle">Quiz Completed!</h3>
+          <p class="text-sm text-slate-300" id="quiz-score-text">You scored 4 out of 5</p>
+
+          <div class="flex items-center justify-center gap-3 pt-4">
+            <button onclick="restartQuiz()" class="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-white font-semibold text-xs rounded-xl transition-all">
+              <i class="fa-solid fa-rotate-right mr-1.5"></i> <span data-key="retryQuiz">Try Again</span>
+            </button>
+            <button onclick="switchView('3d')" class="px-5 py-2.5 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs rounded-xl transition-all">
+              <i class="fa-solid fa-cube mr-1.5"></i> <span data-key="backTo3d">Back to 3D View</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Application Script Logic -->
+  <script>
+    /* ====================================================================
+       1. DATA STRUCTURE (Bilingual: Hinglish & English)
+       ==================================================================== */
+    const translations = {
+      hinglish: {
+        headerSubtitle: "3D Interactive Sharir Vigyan Explorer",
+        tab3d: "3D Explorer",
+        tabQuiz: "Quiz Mode",
+        selectOrganTitle: "Organ Select Karein",
+        simControls: "Simulation Speed",
+        activeSim: "Active Simulation",
+        aboutOrgan: "Kaam Kaise Karta Hai",
+        keyStats: "Mukhya Stats & Data",
+        funFactTitle: "Kya Aap Jante Hain?",
+        testKnowledgeBtn: "Is Organ Par Quiz Dein",
+        guideRotate: "Left Click + Drag: Ghumayein",
+        guideZoom: "Scroll: Zoom Karein",
+        guideClick: "Organ Par Click Karein",
+        nextQuestion: "Agle Sawaal Par Jayein",
+        quizDoneTitle: "Quiz Poora Ho Gaya!",
+        retryQuiz: "Dobara Koshish Karein",
+        backTo3d: "3D Model Par Wapas Jayein"
+      },
+      en: {
+        headerSubtitle: "3D Interactive Human Anatomy Explorer",
+        tab3d: "3D Explorer",
+        tabQuiz: "Quiz Mode",
+        selectOrganTitle: "Select Organ",
+        simControls: "Simulation Speed",
+        activeSim: "Active Simulation",
+        aboutOrgan: "How It Works",
+        keyStats: "Key Metrics & Stats",
+        funFactTitle: "Did You Know?",
+        testKnowledgeBtn: "Test Knowledge on this Organ",
+        guideRotate: "Left Click + Drag: Rotate",
+        guideZoom: "Scroll: Zoom",
+        guideClick: "Click Organ to Inspect",
+        nextQuestion: "Next Question",
+        quizDoneTitle: "Quiz Completed!",
+        retryQuiz: "Try Again",
+        backTo3d: "Back to 3D View"
+      }
+    };
+
+    const organData = [
+      {
+        id: "brain",
+        name: { en: "Brain", hinglish: "Brain (Dimag)" },
+        category: { en: "Nervous System", hinglish: "Tantrika Tantra (Nervous System)" },
+        color: 0x38bdf8,
+        position: { x: 0, y: 2.2, z: 0 },
+        simStatus: { en: "Neural Pulses Firing", hinglish: "Neural Signals Active" },
+        desc: {
+          en: "The brain is the command center of the human body. It controls thoughts, memory, emotions, motor skills, vision, breathing, and every process that regulates our body.",
+          hinglish: "Dimag aapki poori body ka master control unit hai. Yeh memory, emotions, thought process, aur sabhi organs ke signals ko real-time manage karta hai."
+        },
+        stats: [
+          { label: { en: "Neurons", hinglish: "Tantrika Koshika" }, val: "~86 Billion" },
+          { label: { en: "Power Used", hinglish: "Energy Use" }, val: "~20 Watts" },
+          { label: { en: "Avg Weight", hinglish: "Avg Wazan" }, val: "~1.4 kg" },
+          { label: { en: "Memory Capacity", hinglish: "Memory Capacity" }, val: "~2.5 Petabytes" }
+        ],
+        fact: {
+          en: "Your brain generates enough electricity to power a small low-wattage LED bulb while awake!",
+          hinglish: "Aapka dimag awake rehne par itni electricity produce karta hai ki ek chhota LED bulb jal sake!"
+        },
+        icon: "fa-brain"
+      },
+      {
+        id: "heart",
+        name: { en: "Heart", hinglish: "Heart (Dil)" },
+        category: { en: "Circulatory System", hinglish: "Rakt Sancharan Tantra" },
+        color: 0xef4444,
+        position: { x: -0.2, y: 0.8, z: 0.1 },
+        simStatus: { en: "72 BPM Cardiac Cycle", hinglish: "72 BPM Dhadkan Rhythm" },
+        desc: {
+          en: "The heart is a muscular organ that pumps blood continuously through blood vessels. It delivers oxygen and essential nutrients to every tissue in the body.",
+          hinglish: "Dil (Heart) ek muscular pump hai jo continuous blood circulate karta hai, poore sharir me oxygen aur nutrients pahunchane ke liye."
+        },
+        stats: [
+          { label: { en: "Heart Rate", hinglish: "Heartbeat" }, val: "60-100 BPM" },
+          { label: { en: "Daily Beats", hinglish: "Din me Dhadkan" }, val: "~100,000" },
+          { label: { en: "Pump Volume", hinglish: "Rakt Volume" }, val: "~7,500 L/day" },
+          { label: { en: "Chambers", hinglish: "Chambers" }, val: "4 (Atria & Ventricles)" }
+        ],
+        fact: {
+          en: "The heart creates enough pressure to squirt blood up to 30 feet across a room!",
+          hinglish: "Dil itna pressure generate kar sakta hai ki blood lagbhag 30 feet door tak pump ho sakta hai!"
+        },
+        icon: "fa-heart-pulse"
+      },
+      {
+        id: "lungs",
+        name: { en: "Lungs", hinglish: "Lungs (Fephde)" },
+        category: { en: "Respiratory System", hinglish: "Shwasan Tantra" },
+        color: 0x06b6d4,
+        position: { x: 0, y: 0.8, z: -0.1 },
+        simStatus: { en: "Breathing Cycle (16 BPM)", hinglish: "Saans Lene Ka Rhythm" },
+        desc: {
+          en: "The lungs take in oxygen from the air during inhalation and release carbon dioxide during exhalation, keeping our bloodstream oxygen-rich.",
+          hinglish: "Fephde (Lungs) respiration (saans lene) ke liye responsible hain. Ye air se oxygen absorb karke blood me bhejte hain aur carbon dioxide nikalte hain."
+        },
+        stats: [
+          { label: { en: "Breath Rate", hinglish: "Breaths/Min" }, val: "12-20 bpm" },
+          { label: { en: "Surface Area", hinglish: "Surface Area" }, val: "~70 m²" },
+          { label: { en: "Daily Capacity", hinglish: "Daily Air Volume" }, val: "~11,000 Liters" },
+          { label: { en: "Main Muscle", hinglish: "Main Muscle" }, val: "Diaphragm" }
+        ],
+        fact: {
+          en: "The surface area of both human lungs combined is roughly equal to a full tennis court!",
+          hinglish: "Dono fephdon ka total surface area failaya jaye toh ek tennis court ke barabar hoga!"
+        },
+        icon: "fa-lungs"
+      },
+      {
+        id: "stomach",
+        name: { en: "Stomach", hinglish: "Stomach (Pet)" },
+        category: { en: "Digestive System", hinglish: "Pachan Tantra" },
+        color: 0xeab308,
+        position: { x: -0.2, y: -0.2, z: 0.1 },
+        simStatus: { en: "Gastric Juice Motility", hinglish: "Pachan Acid Wave" },
+        desc: {
+          en: "The stomach breaks down food mechanically and chemically using gastric juices containing powerful Hydrochloric Acid (HCl) and enzymes.",
+          hinglish: "Pet (Stomach) khane ko break karne aur digest karne ka kaam karta hai, strong gastric acid (HCl) aur enzymes ka use karke."
+        },
+        stats: [
+          { label: { en: "Acidity (pH)", hinglish: "Acid pH Level" }, val: "1.5 - 3.5" },
+          { label: { en: "Capacity", hinglish: "Kshamta" }, val: "1.5 Liters" },
+          { label: { en: "Digestion Time", hinglish: "Pachan Samay" }, val: "2 - 4 Hours" },
+          { label: { en: "Key Acid", hinglish: "Mukhya Acid" }, val: "Hydrochloric (HCl)" }
+        ],
+        fact: {
+          en: "Stomach acid is strong enough to dissolve metal razor blades, which is why the stomach lining replaces itself every few days!",
+          hinglish: "Stomach ka acid razor blade ko bhi dissolve kar sakta hai, isiliye stomach ki andaruni lining har 3-4 din me regenerate hoti hai!"
+        },
+        icon: "fa-utensils"
+      },
+      {
+        id: "kidneys",
+        name: { en: "Kidneys", hinglish: "Kidneys (Gurde)" },
+        category: { en: "Excretory System", hinglish: "Utssarjan Tantra" },
+        color: 0xa855f7,
+        position: { x: 0, y: -0.6, z: -0.2 },
+        simStatus: { en: "Blood Filtration Active", hinglish: "Rakt Safai Active" },
+        desc: {
+          en: "Kidneys filter waste products and excess fluid from the blood to form urine, while balancing essential electrolytes and regulating blood pressure.",
+          hinglish: "Gurde (Kidneys) blood me se waste products aur extra fluid filter karke urine banate hain aur blood pressure balance rakhte hain."
+        },
+        stats: [
+          { label: { en: "Filtered Blood", hinglish: "Filtered Blood" }, val: "~180 L/day" },
+          { label: { en: "Filtering Units", hinglish: "Nephrons Count" }, val: "~1 Million/Kidney" },
+          { label: { en: "Organ Count", hinglish: "Sankhya" }, val: "2 Paired Kidneys" },
+          { label: { en: "Urine Formed", hinglish: "Urine Output" }, val: "~1.5 L/day" }
+        ],
+        fact: {
+          en: "All the blood in your body passes through your kidneys roughly 40 times every single day!",
+          hinglish: "Aapka poora blood din me lagbhag 40 baar kidneys se hokar guzarta hai safai ke liye!"
+        },
+        icon: "fa-filter"
+      }
+    ];
+
+    const quizQuestions = [
+      {
+        q: {
+          en: "Which organ pumps oxygen-rich blood throughout the human body?",
+          hinglish: "Inme se kaun sa organ poori body me oxygenated blood pump karta hai?"
+        },
+        options: [
+          { text: { en: "Brain", hinglish: "Dimag (Brain)" } },
+          { text: { en: "Heart", hinglish: "Dil (Heart)" } },
+          { text: { en: "Lungs", hinglish: "Fephde (Lungs)" } },
+          { text: { en: "Kidneys", hinglish: "Gurde (Kidneys)" } }
+        ],
+        correct: 1,
+        exp: {
+          en: "The heart pumps blood continuously delivering oxygen and nutrients throughout the body.",
+          hinglish: "Dil (Heart) ek muscular pump hai jo continuous blood circulate karke oxygen pahunchata hai."
+        }
+      },
+      {
+        q: {
+          en: "Which organ is responsible for absorbing oxygen from inhaled air into the blood?",
+          hinglish: "Inme se kaun sa organ air se oxygen absorb karke blood me bhejta hai?"
+        },
+        options: [
+          { text: { en: "Lungs", hinglish: "Fephde (Lungs)" } },
+          { text: { en: "Stomach", hinglish: "Pet (Stomach)" } },
+          { text: { en: "Liver", hinglish: "Liver" } },
+          { text: { en: "Brain", hinglish: "Dimag" } }
+        ],
+        correct: 0,
+        exp: {
+          en: "Lungs take in oxygen from inhaled air during respiration.",
+          hinglish: "Fephde saans lene ke dooraan oxygen absorb karke carbon dioxide bahar nikalte hain."
+        }
+      },
+      {
+        q: {
+          en: "Approximately how much of the body's total energy does the brain consume?",
+          hinglish: "Dimag (Brain) body ki lagbhag kitni energy consume karta hai?"
+        },
+        options: [
+          { text: { en: "5%", hinglish: "5%" } },
+          { text: { en: "10%", hinglish: "10%" } },
+          { text: { en: "20%", hinglish: "20%" } },
+          { text: { en: "50%", hinglish: "50%" } }
+        ],
+        correct: 2,
+        exp: {
+          en: "Even though the brain accounts for ~2% of body weight, it consumes about 20% of its energy.",
+          hinglish: "Dimag chhota hone ke bawajood sharir ki lagbhag 20% energy aur oxygen consume karta hai."
+        }
+      },
+      {
+        q: {
+          en: "Which highly acidic fluid helps digest food inside the stomach?",
+          hinglish: "Stomach me khana digest karne ke liye kaun sa strong acid hota hai?"
+        },
+        options: [
+          { text: { en: "Nitric Acid", hinglish: "Nitric Acid" } },
+          { text: { en: "Hydrochloric Acid (HCl)", hinglish: "Hydrochloric Acid (HCl)" } },
+          { text: { en: "Sulfuric Acid", hinglish: "Sulfuric Acid" } },
+          { text: { en: "Acetic Acid", hinglish: "Acetic Acid" } }
+        ],
+        correct: 1,
+        exp: {
+          en: "Hydrochloric acid (HCl) in the stomach breaks down food and kills harmful bacteria.",
+          hinglish: "Stomach me Hydrochloric acid (HCl) hota hai jo food digest karta hai aur bacteria marta hai."
+        }
+      },
+      {
+        q: {
+          en: "How many liters of blood do the kidneys filter roughly every day?",
+          hinglish: "Kidneys 1 din me lagbhag kitna blood filter karti hain?"
+        },
+        options: [
+          { text: { en: "10 Liters", hinglish: "10 Liters" } },
+          { text: { en: "50 Liters", hinglish: "50 Liters" } },
+          { text: { en: "180 Liters", hinglish: "180 Liters" } },
+          { text: { en: "500 Liters", hinglish: "500 Liters" } }
+        ],
+        correct: 2,
+        exp: {
+          en: "Kidneys filter about 180 liters of blood daily to produce roughly 1.5 liters of urine.",
+          hinglish: "Gurde har din lagbhag 180 Liters blood filter karke toxic material urine ke dwara nikalte hain."
+        }
+      }
+    ];
+
+    /* ====================================================================
+       2. GLOBAL STATE APP MANAGEMENT
+       ==================================================================== */
+    let currentLang = 'hinglish';
+    let selectedOrganId = null;
+    let simSpeed = 1.0;
+    let isSimPlaying = true;
+    let activeView = '3d'; // '3d' or 'quiz'
+
+    // Quiz State
+    let currentQuizIdx = 0;
+    let quizScore = 0;
+    let selectedOptionIdx = null;
+
+    /* ====================================================================
+       3. THREE.JS 3D SCENE & ANIMATION SETUP
+       ==================================================================== */
+    let scene, camera, renderer, controls, raycaster, mouse;
+    let organMeshes = {};
+    let particlesMesh, neuralParticles;
+    let mannequinMesh;
+    let clock = new THREE.Clock();
+
+    function init3D() {
+      const container = document.getElementById('canvas-container');
+      
+      // Scene
+      scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x0b0f19);
+      scene.fog = new THREE.FogExp2(0x0b0f19, 0.08);
+
+      // Camera
+      camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 100);
+      camera.position.set(0, 0.5, 7.5);
+
+      // Renderer
+      renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setSize(container.clientWidth, container.clientHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.shadowMap.enabled = true;
+      container.appendChild(renderer.domElement);
+
+      // Orbit Controls
+      controls = new THREE.OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.05;
+      controls.maxDistance = 12;
+      controls.minDistance = 3;
+      controls.maxPolarAngle = Math.PI / 2 + 0.1;
+
+      // Lights
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+      scene.add(ambientLight);
+
+      const dirLight1 = new THREE.DirectionalLight(0x38bdf8, 1.5);
+      dirLight1.position.set(5, 10, 7);
+      scene.add(dirLight1);
+
+      const dirLight2 = new THREE.DirectionalLight(0xef4444, 1.2);
+      dirLight2.position.set(-5, -5, -5);
+      scene.add(dirLight2);
+
+      const pointLight = new THREE.PointLight(0x00f2fe, 1.5, 10);
+      pointLight.position.set(0, 1, 2);
+      scene.add(pointLight);
+
+      // Create Transparent Body Silhouette Mannequin
+      createBodyMannequin();
+
+      // Create 3D Organ Models
+      createOrgans();
+
+      // Create Vascular & Neural Particle Systems
+      createParticles();
+
+      // Raycaster for Mouse Interactivity
+      raycaster = new THREE.Raycaster();
+      mouse = new THREE.Vector2();
+
+      // Events
+      window.addEventListener('resize', onWindowResize);
+      renderer.domElement.addEventListener('pointerdown', onPointerClick);
+      renderer.domElement.addEventListener('pointermove', onPointerMove);
+
+      // Start Animation Loop
+      animate();
+    }
+
+    /* Create Stylized Outer Body Mannequin Wireframe */
+    function createBodyMannequin() {
+      const mannequinGroup = new THREE.Group();
+
+      // Head Mesh
+      const headGeo = new THREE.SphereGeometry(0.75, 32, 32);
+      headGeo.scale(0.85, 1.1, 0.9);
+      headGeo.translate(0, 2.2, 0);
+
+      // Torso Mesh
+      const torsoGeo = new THREE.CylinderGeometry(0.9, 0.65, 2.8, 32);
+      torsoGeo.translate(0, 0, 0);
+
+      // Neck Mesh
+      const neckGeo = new THREE.CylinderGeometry(0.35, 0.45, 0.5, 16);
+      neckGeo.translate(0, 1.35, 0);
+
+      // Combine Geometries
+      const mat = new THREE.MeshPhysicalMaterial({
+        color: 0x1e293b,
+        transparent: true,
+        opacity: 0.18,
+        wireframe: false,
+        roughness: 0.2,
+        transmission: 0.6,
+        thickness: 0.5
+      });
+
+      const wireframeMat = new THREE.MeshBasicMaterial({
+        color: 0x38bdf8,
+        wireframe: true,
+        transparent: true,
+        opacity: 0.08
+      });
+
+      const head = new THREE.Mesh(headGeo, mat);
+      const headWire = new THREE.Mesh(headGeo, wireframeMat);
+      const torso = new THREE.Mesh(torsoGeo, mat);
+      const torsoWire = new THREE.Mesh(torsoGeo, wireframeMat);
+      const neck = new THREE.Mesh(neckGeo, mat);
+
+      mannequinGroup.add(head, headWire, torso, torsoWire, neck);
+      scene.add(mannequinGroup);
+      mannequinMesh = mannequinGroup;
+    }
+
+    /* Create Organ Geometries */
+    function createOrgans() {
+      // 1. BRAIN (Two Folded Hemispheres)
+      const brainGroup = new THREE.Group();
+      const brainMat = new THREE.MeshStandardMaterial({
+        color: 0x38bdf8,
+        roughness: 0.3,
+        metalness: 0.2,
+        emissive: 0x0284c7,
+        emissiveIntensity: 0.2
+      });
+
+      const leftHemi = new THREE.Mesh(new THREE.SphereGeometry(0.45, 24, 24), brainMat);
+      leftHemi.scale.set(0.7, 0.9, 1.1);
+      leftHemi.position.set(-0.16, 2.25, 0);
+
+      const rightHemi = new THREE.Mesh(new THREE.SphereGeometry(0.45, 24, 24), brainMat);
+      rightHemi.scale.set(0.7, 0.9, 1.1);
+      rightHemi.position.set(0.16, 2.25, 0);
+
+      brainGroup.add(leftHemi, rightHemi);
+      brainGroup.userData = { id: "brain" };
+      scene.add(brainGroup);
+      organMeshes["brain"] = brainGroup;
+
+      // 2. HEART (Anatomical Heart Shape + Aorta Arch)
+      const heartGroup = new THREE.Group();
+      const heartMat = new THREE.MeshStandardMaterial({
+        color: 0xef4444,
+        roughness: 0.4,
+        metalness: 0.1,
+        emissive: 0x991b1b,
+        emissiveIntensity: 0.3
+      });
+
+      const mainHeart = new THREE.Mesh(new THREE.SphereGeometry(0.38, 24, 24), heartMat);
+      mainHeart.scale.set(0.85, 1.2, 0.85);
+
+      // Aorta Arch
+      const aortaGeo = new THREE.TorusGeometry(0.18, 0.06, 12, 24, Math.PI * 1.2);
+      const aortaMat = new THREE.MeshStandardMaterial({ color: 0xd97706, roughness: 0.5 });
+      const aorta = new THREE.Mesh(aortaGeo, aortaMat);
+      aorta.rotation.x = Math.PI / 2;
+      aorta.position.set(0, 0.25, 0);
+
+      heartGroup.add(mainHeart, aorta);
+      heartGroup.position.set(-0.25, 0.8, 0.1);
+      heartGroup.userData = { id: "heart" };
+      scene.add(heartGroup);
+      organMeshes["heart"] = heartGroup;
+
+      // 3. LUNGS (Left and Right Lungs)
+      const lungsGroup = new THREE.Group();
+      const lungMat = new THREE.MeshStandardMaterial({
+        color: 0x06b6d4,
+        transparent: true,
+        opacity: 0.85,
+        roughness: 0.3,
+        emissive: 0x0e7490,
+        emissiveIntensity: 0.2
+      });
+
+      const leftLung = new THREE.Mesh(new THREE.ConeGeometry(0.35, 1.1, 20), lungMat);
+      leftLung.rotation.z = -0.15;
+      leftLung.position.set(-0.48, 0.75, -0.05);
+
+      const rightLung = new THREE.Mesh(new THREE.ConeGeometry(0.38, 1.15, 20), lungMat);
+      rightLung.rotation.z = 0.15;
+      rightLung.position.set(0.48, 0.75, -0.05);
+
+      lungsGroup.add(leftLung, rightLung);
+      lungsGroup.userData = { id: "lungs" };
+      scene.add(lungsGroup);
+      organMeshes["lungs"] = lungsGroup;
+
+      // 4. STOMACH (J-Shaped Anatomical Organ)
+      const stomachGroup = new THREE.Group();
+      const stomachMat = new THREE.MeshStandardMaterial({
+        color: 0xeab308,
+        roughness: 0.4,
+        emissive: 0x854d0e,
+        emissiveIntensity: 0.2
+      });
+
+      const stomachBody = new THREE.Mesh(new THREE.TorusGeometry(0.25, 0.14, 16, 24, Math.PI * 1.1), stomachMat);
+      stomachBody.rotation.z = -Math.PI / 3;
+      stomachGroup.add(stomachBody);
+      stomachGroup.position.set(-0.2, -0.15, 0.1);
+      stomachGroup.userData = { id: "stomach" };
+      scene.add(stomachGroup);
+      organMeshes["stomach"] = stomachGroup;
+
+      // 5. KIDNEYS (Paired Bean Shapes)
+      const kidneysGroup = new THREE.Group();
+      const kidneyMat = new THREE.MeshStandardMaterial({
+        color: 0xa855f7,
+        roughness: 0.3,
+        emissive: 0x6b21a8,
+        emissiveIntensity: 0.3
+      });
+
+      const leftKidney = new THREE.Mesh(new THREE.SphereGeometry(0.2, 16, 16), kidneyMat);
+      leftKidney.scale.set(0.7, 1.2, 0.8);
+      leftKidney.position.set(-0.4, -0.65, -0.15);
+
+      const rightKidney = new THREE.Mesh(new THREE.SphereGeometry(0.2, 16, 16), kidneyMat);
+      rightKidney.scale.set(0.7, 1.2, 0.8);
+      rightKidney.position.set(0.4, -0.65, -0.15);
+
+      kidneysGroup.add(leftKidney, rightKidney);
+      kidneysGroup.userData = { id: "kidneys" };
+      scene.add(kidneysGroup);
+      organMeshes["kidneys"] = kidneysGroup;
+    }
+
+    /* Floating Blood Vascular Particles & Neural Sparks */
+    function createParticles() {
+      const particleCount = 180;
+      const geometry = new THREE.BufferGeometry();
+      const positions = new Float32Array(particleCount * 3);
+      const colors = new Float32Array(particleCount * 3);
+
+      for (let i = 0; i < particleCount; i++) {
+        positions[i * 3] = (Math.random() - 0.5) * 1.6;
+        positions[i * 3 + 1] = (Math.random() - 0.5) * 3.5;
+        positions[i * 3 + 2] = (Math.random() - 0.5) * 1.2;
+
+        colors[i * 3] = 0.2;
+        colors[i * 3 + 1] = 0.8;
+        colors[i * 3 + 2] = 1.0;
+      }
+
+      geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+      const pMaterial = new THREE.PointsMaterial({
+        size: 0.04,
+        vertexColors: true,
+        transparent: true,
+        opacity: 0.6,
+        blending: THREE.AdditiveBlending
+      });
+
+      particlesMesh = new THREE.Points(geometry, pMaterial);
+      scene.add(particlesMesh);
+    }
+
+    /* Real-Time Render Animation Loop */
+    function animate() {
+      requestAnimationFrame(animate);
+
+      const delta = clock.getDelta();
+      const elapsedTime = clock.getElapsedTime() * simSpeed;
+
+      controls.update();
+
+      if (isSimPlaying) {
+        // 1. Heart Beat Animation (Contraction & Expansion Lub-Dub Rhythm)
+        if (organMeshes["heart"]) {
+          const pulse = 1 + Math.sin(elapsedTime * 6) * 0.08 + Math.sin(elapsedTime * 12) * 0.03;
+          organMeshes["heart"].scale.set(pulse, pulse, pulse);
         }
 
-        function toggleAuthFormMode() {
-            state.authIsSignup = !state.authIsSignup;
-            const emailGroup = document.getElementById('emailGroup');
-            emailGroup.style.display = state.authIsSignup ? 'block' : 'none';
-            changeLanguage(state.currentLang); // Refresh specific form strings
+        // 2. Lungs Breathing Simulation (Expansion & Contraction)
+        if (organMeshes["lungs"]) {
+          const breath = 1 + Math.sin(elapsedTime * 2) * 0.09;
+          organMeshes["lungs"].children[0].scale.set(breath, breath, breath);
+          organMeshes["lungs"].children[1].scale.set(breath, breath, breath);
         }
 
-        function handleAuthSubmit(e) {
-            e.preventDefault();
-            const usernameInput = document.getElementById('authUsername').value.trim();
-            
-            if(!usernameInput) return;
-
-            // If new system registration, configure account matrix baseline
-            if(!state.usersDatabase[usernameInput]) {
-                state.usersDatabase[usernameInput] = {
-                    username: usernameInput,
-                    ordersCount: 0
-                };
-            }
-
-            state.loggedInUser = state.usersDatabase[usernameInput];
-            document.getElementById('logoutBtn').style.display = 'block';
-            
-            switchView('client');
-            evaluateUserOrderConstraints();
-            renderTables();
+        // 3. Brain Neural Pulse Rotation
+        if (organMeshes["brain"]) {
+          organMeshes["brain"].rotation.y = Math.sin(elapsedTime * 0.5) * 0.05;
         }
 
-        function logoutUser() {
-            state.loggedInUser = null;
-            document.getElementById('logoutBtn').style.display = 'none';
-            document.getElementById('authUsername').value = '';
-            document.getElementById('authPassword').value = '';
-            switchView('auth');
+        // 4. Stomach Digest Wave
+        if (organMeshes["stomach"]) {
+          organMeshes["stomach"].rotation.y = Math.sin(elapsedTime * 1.5) * 0.08;
         }
 
-        function switchView(targetView) {
-            state.currentAppView = targetView;
-            document.querySelectorAll('.view-panel').forEach(p => p.classList.remove('active'));
-            
-            const btn = document.getElementById('roleToggleBtn');
-            if(targetView === 'admin') {
-                document.getElementById('adminView').classList.add('active');
-                btn.innerText = "Switch to Client Dashboard";
-            } else if (targetView === 'client') {
-                document.getElementById('clientView').classList.add('active');
-                btn.innerText = "Switch to Admin Panel";
-            } else {
-                document.getElementById('authView').classList.add('active');
-                btn.innerText = "Switch to Admin Panel";
-            }
+        // 5. Particles Drift Motion
+        if (particlesMesh) {
+          const positions = particlesMesh.geometry.attributes.position.array;
+          for (let i = 0; i < positions.length; i += 3) {
+            positions[i + 1] += Math.sin(elapsedTime + i) * 0.002;
+            if (positions[i + 1] > 2.8) positions[i + 1] = -1.2;
+          }
+          particlesMesh.geometry.attributes.position.needsUpdate = true;
         }
+      }
 
-        function toggleRoleView() {
-            if(state.currentAppView === 'admin') {
-                if(state.loggedInUser) {
-                    switchView('client');
-                } else {
-                    switchView('auth');
-                }
-            } else {
-                switchView('admin');
-                renderTables();
-            }
+      renderer.render(scene, camera);
+    }
+
+    /* Window Resize Handler */
+    function onWindowResize() {
+      const container = document.getElementById('canvas-container');
+      camera.aspect = container.clientWidth / container.clientHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(container.clientWidth, container.clientHeight);
+    }
+
+    /* Raycasting / Mouse Interaction */
+    function onPointerMove(event) {
+      const rect = renderer.domElement.getBoundingClientRect();
+      mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+      mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+      raycaster.setFromCamera(mouse, camera);
+      const intersects = raycaster.intersectObjects(scene.children, true);
+
+      let foundOrgan = false;
+      for (let hit of intersects) {
+        let parent = hit.object.parent;
+        while (parent && !parent.userData.id) {
+          parent = parent.parent;
         }
-
-        function setServiceType(type, element) {
-            state.selectedService = type;
-            document.querySelectorAll('.service-btn').forEach(b => b.classList.remove('active'));
-            element.classList.add('active');
+        if (parent && parent.userData.id) {
+          document.body.style.cursor = 'pointer';
+          foundOrgan = true;
+          break;
         }
+      }
+      if (!foundOrgan) {
+        document.body.style.cursor = 'default';
+      }
+    }
 
-        // --- THE ENGINE BUSINESS RULE GATE: 1K FIRST TIME VS UNLIMITED NEXT ---
-        function evaluateUserOrderConstraints() {
-            if(!state.loggedInUser) return;
+    function onPointerClick(event) {
+      const rect = renderer.domElement.getBoundingClientRect();
+      mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+      mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
 
-            const qtyField = document.getElementById('orderQuantity');
-            const tierBadge = document.getElementById('tierBadge');
-            const limitMsg = document.getElementById('limitMessage');
-            const currentOrdersCount = state.loggedInUser.ordersCount;
-            const t = dictionary[state.currentLang];
+      raycaster.setFromCamera(mouse, camera);
+      const intersects = raycaster.intersectObjects(scene.children, true);
 
-            if(currentOrdersCount === 0) {
-                // Strict rule condition met: First time deployment is forced 1,000
-                qtyField.value = 1000;
-                qtyField.readOnly = true;
-                
-                tierBadge.className = "tier-badge badge-restricted";
-                tierBadge.innerText = t.badgeRestricted;
-                limitMsg.innerText = t.msgFirst;
-                limitMsg.style.borderLeftColor = "var(--warning)";
-            } else {
-                // Second execution onwards: Uncapped premium access enabled
-                if(qtyField.readOnly) {
-                    qtyField.value = 5000; // Provide standard default slider/input starting metric
-                    qtyField.readOnly = false;
-                }
-                
-                tierBadge.className = "tier-badge badge-unlimited";
-                tierBadge.innerText = t.badgeUnlimited;
-                limitMsg.innerText =  t.msgPremium;
-                limitMsg.style.borderLeftColor = "var(--success)";
-            }
+      for (let hit of intersects) {
+        let parent = hit.object.parent;
+        while (parent && !parent.userData.id) {
+          parent = parent.parent;
         }
-
-        function handleCreateOrder(e) {
-            e.preventDefault();
-            if(!state.loggedInUser) {
-                alert("Session integration terminated. Please login.");
-                switchView('auth');
-                return;
-            }
-
-            const targetRoute = document.getElementById('targetUrl').value;
-            const specifiedVolume = parseInt(document.getElementById('orderQuantity').value);
-
-            // Double security crosscheck validation rules logic
-            if(state.loggedInUser.ordersCount === 0 && specifiedVolume !== 1000) {
-                alert("Security policy violation: Introductory order restricted to exactly 1,000 units.");
-                return;
-            }
-
-            // Insert into global state log array mimicking datastore deployment
-            const newPayload = {
-                user: state.loggedInUser.username,
-                service: state.selectedService,
-                quantity: specifiedVolume,
-                target: targetRoute,
-                status: 'Processing'
-            };
-
-            state.ordersDatabase.push(newPayload);
-            
-            // Advance system validation count to instantly lift limits for second request
-            state.loggedInUser.ordersCount++;
-            
-            // Clear inputs & update interface
-            document.getElementById('targetUrl').value = '';
-            
-            evaluateUserOrderConstraints();
-            renderTables();
-            
-            alert("Infrastructure Vector Connected Successfully! Order Dispatched.");
+        if (parent && parent.userData.id) {
+          selectOrgan(parent.userData.id);
+          break;
         }
+      }
+    }
 
-        function renderTables() {
-            // Client Filtered Matrix
-            const clientBody = document.getElementById('clientOrderHistoryTable');
-            clientBody.innerHTML = '';
-            
-            if(state.loggedInUser) {
-                const userFilteredOrders = state.ordersDatabase.filter(o => o.user === state.loggedInUser.username);
-                userFilteredOrders.reverse().forEach(o => {
-                    clientBody.innerHTML += `
-                        <tr>
-                            <td style="text-transform: capitalize;"><i class="fa-solid ${getServiceIcon(o.service)}"></i> ${o.service}</td>
-                            <td>${o.quantity.toLocaleString()}</td>
-                            <td style="max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${o.target}</td>
-                            <td><span class="badge-table" style="background:rgba(0, 242, 254, 0.15); color:var(--accent-glow);">${o.status}</span></td>
-                        </tr>
-                    `;
-                });
-            }
+    /* Camera Smooth Focus on Selected Organ */
+    function focusCameraOn(organId) {
+      const organ = organData.find(o => o.id === organId);
+      if (!organ) return;
 
-            // Administrative Global Ledger Matrix
-            document.getElementById('statUsers').innerText = Object.keys(state.usersDatabase).length;
-            document.getElementById('statOrders').innerText = state.ordersDatabase.length;
+      const targetPos = organ.position;
+      
+      // Animate Camera Focus
+      let startTime = null;
+      const startCamPos = camera.position.clone();
+      const targetCamPos = new THREE.Vector3(targetPos.x, targetPos.y, targetPos.z + 3.2);
 
-            const adminBody = document.getElementById('adminGlobalTable');
-            adminBody.innerHTML = '';
-            [...state.ordersDatabase].reverse().forEach(o => {
-                adminBody.innerHTML += `
-                    <tr>
-                        <td><strong>@${o.user}</strong></td>
-                        <td style="text-transform: capitalize;">${o.service}</td>
-                        <td>${o.quantity.toLocaleString()}</td>
-                        <td style="color:var(--text-muted); font-size:12px;">${o.target}</td>
-                        <td><span class="badge-table" style="background:rgba(0, 230, 118, 0.15); color:var(--success);">${o.status}</span></td>
-                    </tr>
-                `;
-            });
+      function step(timestamp) {
+        if (!startTime) startTime = timestamp;
+        const progress = Math.min((timestamp - startTime) / 600, 1);
+        
+        camera.position.lerpVectors(startCamPos, targetCamPos, progress);
+        controls.target.set(targetPos.x, targetPos.y, targetPos.z);
+        
+        if (progress < 1) {
+          requestAnimationFrame(step);
         }
+      }
+      requestAnimationFrame(step);
+    }
 
-        function getServiceIcon(srv) {
-            if(srv === 'views') return 'fa-eye';
-            if(srv === 'likes') return 'fa-heart';
-            if(srv === 'shares') return 'fa-share';
-            return 'fa-bookmark';
+    function resetCameraView() {
+      controls.target.set(0, 0, 0);
+      camera.position.set(0, 0.5, 7.5);
+      closeOrganDetail();
+    }
+
+    /* ====================================================================
+       4. UI LOGIC, SEARCH, BILINGUAL & MODALS
+       ==================================================================== */
+    function setLanguage(lang) {
+      currentLang = lang;
+
+      // Update Active Button Styling
+      document.getElementById('lang-hinglish').className = lang === 'hinglish' 
+        ? "px-3 py-1 text-xs font-bold rounded-lg bg-slate-800 text-cyan-400 border border-cyan-500/30 transition-all flex items-center gap-1.5"
+        : "px-3 py-1 text-xs font-bold rounded-lg text-slate-400 hover:text-slate-200 transition-all flex items-center gap-1.5";
+
+      document.getElementById('lang-en').className = lang === 'en' 
+        ? "px-3 py-1 text-xs font-bold rounded-lg bg-slate-800 text-cyan-400 border border-cyan-500/30 transition-all flex items-center gap-1.5"
+        : "px-3 py-1 text-xs font-bold rounded-lg text-slate-400 hover:text-slate-200 transition-all flex items-center gap-1.5";
+
+      // Update Text Elements with Data Attributes
+      document.querySelectorAll('[data-key]').forEach(el => {
+        const key = el.getAttribute('data-key');
+        if (translations[lang][key]) {
+          el.innerText = translations[lang][key];
         }
+      });
 
-        function resetGlobalMockData() {
-            // Hard clean deployment state counters for debug operations
-            state.ordersDatabase = [
-                { user: 'system_test', service: 'likes', quantity: 1000, target: 'https://instagram.com/p/test', status: 'Delivered' }
-            ];
-            Object.keys(state.usersDatabase).forEach(k => {
-                state.usersDatabase[k].ordersCount = 0;
-            });
-            if(state.loggedInUser) {
-                state.loggedInUser.ordersCount = 0;
-            }
-            evaluateUserOrderConstraints();
-            renderTables();
-            alert("Global data storage tables updated and reset.");
+      document.getElementById('header-subtitle').innerText = translations[lang].headerSubtitle;
+
+      // Refresh Organ List & Details
+      renderOrganList();
+      if (selectedOrganId) {
+        renderOrganDetail(selectedOrganId);
+      }
+      if (activeView === 'quiz') {
+        renderQuizQuestion();
+      }
+    }
+
+    function renderOrganList(filterText = "") {
+      const listContainer = document.getElementById('organ-list');
+      listContainer.innerHTML = "";
+
+      const filtered = organData.filter(organ => {
+        const nameMatch = organ.name[currentLang].toLowerCase().includes(filterText.toLowerCase()) ||
+                          organ.name.en.toLowerCase().includes(filterText.toLowerCase());
+        return nameMatch;
+      });
+
+      document.getElementById('organ-count').innerText = `${filtered.length} Organs`;
+
+      filtered.forEach(organ => {
+        const isSelected = selectedOrganId === organ.id;
+        const card = document.createElement('div');
+        card.className = `glass-card p-3 rounded-xl cursor-pointer flex items-center justify-between transition-all ${
+          isSelected ? 'border-cyan-400 bg-slate-800/90 shadow-lg shadow-cyan-500/10' : ''
+        }`;
+        card.onclick = () => selectOrgan(organ.id);
+
+        card.innerHTML = `
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-cyan-400 text-sm border border-slate-700">
+              <i class="fa-solid ${organ.icon}"></i>
+            </div>
+            <div>
+              <h4 class="text-xs font-bold text-slate-100">${organ.name[currentLang]}</h4>
+              <p class="text-[10px] text-slate-400">${organ.category[currentLang]}</p>
+            </div>
+          </div>
+          <i class="fa-solid fa-chevron-right text-xs text-slate-500"></i>
+        `;
+        listContainer.appendChild(card);
+      });
+    }
+
+    function selectOrgan(organId) {
+      selectedOrganId = organId;
+      renderOrganList(document.getElementById('organ-search').value);
+      renderOrganDetail(organId);
+      focusCameraOn(organId);
+    }
+
+    function renderOrganDetail(organId) {
+      const organ = organData.find(o => o.id === organId);
+      if (!organ) return;
+
+      const detailCard = document.getElementById('organ-detail-card');
+      detailCard.classList.remove('opacity-0', 'pointer-events-none', 'translate-x-8');
+      detailCard.classList.add('opacity-100', 'pointer-events-auto', 'translate-x-0');
+
+      document.getElementById('organ-title').innerText = organ.name[currentLang];
+      document.getElementById('organ-category').innerText = organ.category[currentLang];
+      document.getElementById('organ-icon').className = `fa-solid ${organ.icon}`;
+      document.getElementById('organ-sim-status').innerText = organ.simStatus[currentLang];
+      document.getElementById('organ-desc').innerText = organ.desc[currentLang];
+      document.getElementById('organ-fact').innerText = organ.fact[currentLang];
+
+      // Populate Stats Grid
+      const statsGrid = document.getElementById('organ-stats-grid');
+      statsGrid.innerHTML = "";
+
+      organ.stats.forEach(stat => {
+        const box = document.createElement('div');
+        box.className = "bg-slate-900/80 p-2.5 rounded-xl border border-slate-800/90";
+        box.innerHTML = `
+          <span class="text-[10px] text-slate-400 block">${stat.label[currentLang]}</span>
+          <span class="text-xs font-bold text-cyan-300 font-display">${stat.val}</span>
+        `;
+        statsGrid.appendChild(box);
+      });
+    }
+
+    function closeOrganDetail() {
+      selectedOrganId = null;
+      renderOrganList(document.getElementById('organ-search').value);
+
+      const detailCard = document.getElementById('organ-detail-card');
+      detailCard.classList.add('opacity-0', 'pointer-events-none', 'translate-x-8');
+      detailCard.classList.remove('opacity-100', 'pointer-events-auto', 'translate-x-0');
+    }
+
+    function handleSearch(val) {
+      const clearBtn = document.getElementById('search-clear');
+      if (val.trim().length > 0) {
+        clearBtn.classList.remove('hidden');
+      } else {
+        clearBtn.classList.add('hidden');
+      }
+      renderOrganList(val);
+    }
+
+    function clearSearch() {
+      const input = document.getElementById('organ-search');
+      input.value = "";
+      handleSearch("");
+    }
+
+    function toggleSimulation() {
+      isSimPlaying = !isSimPlaying;
+      const simText = document.getElementById('sim-text');
+      const simIcon = document.getElementById('sim-icon');
+
+      if (isSimPlaying) {
+        simText.innerText = "Pause";
+        simIcon.className = "fa-solid fa-pause text-[10px]";
+      } else {
+        simText.innerText = "Play";
+        simIcon.className = "fa-solid fa-play text-[10px]";
+      }
+    }
+
+    function setSimSpeed(speed) {
+      simSpeed = speed;
+      ['05', '10', '18'].forEach(s => {
+        const btn = document.getElementById(`speed-${s}`);
+        btn.className = "flex-1 py-1 text-[10px] font-bold rounded bg-slate-800 text-slate-300 hover:bg-slate-700 transition-all";
+      });
+
+      let activeId = 'speed-10';
+      if (speed === 0.5) activeId = 'speed-05';
+      if (speed === 1.8) activeId = 'speed-18';
+
+      document.getElementById(activeId).className = "flex-1 py-1 text-[10px] font-bold rounded bg-cyan-500 text-slate-950 shadow transition-all";
+    }
+
+    function switchView(view) {
+      activeView = view;
+      const quizView = document.getElementById('quiz-view');
+      const tab3d = document.getElementById('tab-3d');
+      const tabQuiz = document.getElementById('tab-quiz');
+
+      if (view === 'quiz') {
+        quizView.classList.remove('hidden');
+        tabQuiz.className = "px-4 py-1.5 text-xs font-semibold rounded-lg bg-cyan-500 text-slate-950 shadow-md transition-all flex items-center gap-2";
+        tab3d.className = "px-4 py-1.5 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition-all flex items-center gap-2";
+        startQuiz();
+      } else {
+        quizView.classList.add('hidden');
+        tab3d.className = "px-4 py-1.5 text-xs font-semibold rounded-lg bg-cyan-500 text-slate-950 shadow-md transition-all flex items-center gap-2";
+        tabQuiz.className = "px-4 py-1.5 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition-all flex items-center gap-2";
+      }
+    }
+
+    /* ====================================================================
+       5. QUIZ INTERACTIVE ENGINE
+       ==================================================================== */
+    function startQuiz() {
+      currentQuizIdx = 0;
+      quizScore = 0;
+      selectedOptionIdx = null;
+
+      document.getElementById('quiz-question-container').classList.remove('hidden');
+      document.getElementById('quiz-result-container').classList.add('hidden');
+      renderQuizQuestion();
+    }
+
+    function startSpecificQuiz() {
+      switchView('quiz');
+    }
+
+    function renderQuizQuestion() {
+      const qData = quizQuestions[currentQuizIdx];
+      selectedOptionIdx = null;
+
+      document.getElementById('quiz-progress-text').innerText = `Question ${currentQuizIdx + 1} of ${quizQuestions.length}`;
+      document.getElementById('quiz-question').innerText = qData.q[currentLang];
+
+      const optionsBox = document.getElementById('quiz-options');
+      optionsBox.innerHTML = "";
+
+      document.getElementById('quiz-explanation').classList.add('hidden');
+      document.getElementById('quiz-next-btn').classList.add('hidden');
+
+      qData.options.forEach((opt, idx) => {
+        const btn = document.createElement('button');
+        btn.className = "w-full p-3 rounded-xl bg-slate-800/90 hover:bg-slate-700/80 border border-slate-700/80 text-left text-xs font-medium text-slate-200 transition-all flex items-center justify-between";
+        btn.onclick = () => selectOption(idx);
+        btn.innerHTML = `
+          <span>${opt.text[currentLang]}</span>
+          <i class="fa-regular fa-circle text-slate-500 text-xs"></i>
+        `;
+        optionsBox.appendChild(btn);
+      });
+    }
+
+    function selectOption(idx) {
+      if (selectedOptionIdx !== null) return; // Prevent re-selection
+      selectedOptionIdx = idx;
+
+      const qData = quizQuestions[currentQuizIdx];
+      const isCorrect = idx === qData.correct;
+      if (isCorrect) quizScore++;
+
+      const optionsBox = document.getElementById('quiz-options');
+      const buttons = optionsBox.children;
+
+      for (let i = 0; i < buttons.length; i++) {
+        if (i === qData.correct) {
+          buttons[i].className = "w-full p-3 rounded-xl bg-emerald-950/80 border border-emerald-500 text-left text-xs font-semibold text-emerald-300 flex items-center justify-between";
+          buttons[i].innerHTML = `<span>${qData.options[i].text[currentLang]}</span> <i class="fa-solid fa-circle-check text-emerald-400"></i>`;
+        } else if (i === idx && !isCorrect) {
+          buttons[i].className = "w-full p-3 rounded-xl bg-rose-950/80 border border-rose-500 text-left text-xs font-semibold text-rose-300 flex items-center justify-between";
+          buttons[i].innerHTML = `<span>${qData.options[i].text[currentLang]}</span> <i class="fa-solid fa-circle-xmark text-rose-400"></i>`;
+        } else {
+          buttons[i].className = "w-full p-3 rounded-xl bg-slate-900/50 border border-slate-800 text-left text-xs text-slate-500 opacity-60 flex items-center justify-between";
         }
+      }
 
-        // Initialize application state view setup
-        changeLanguage('en');
-    </script>
+      // Show Explanation
+      const expBox = document.getElementById('quiz-explanation');
+      expBox.classList.remove('hidden');
+      document.getElementById('explanation-text').innerText = qData.exp[currentLang];
+
+      // Show Next Button
+      document.getElementById('quiz-next-btn').classList.remove('hidden');
+    }
+
+    function nextQuestion() {
+      currentQuizIdx++;
+      if (currentQuizIdx < quizQuestions.length) {
+        renderQuizQuestion();
+      } else {
+        showQuizResults();
+      }
+    }
+
+    function showQuizResults() {
+      document.getElementById('quiz-question-container').classList.add('hidden');
+      document.getElementById('quiz-result-container').classList.remove('hidden');
+
+      const scorePct = Math.round((quizScore / quizQuestions.length) * 100);
+      document.getElementById('quiz-score-text').innerText = currentLang === 'hinglish' 
+        ? `Aapne ${quizQuestions.length} me se ${quizScore} sawaal sahi kiye (${scorePct}%)`
+        : `You scored ${quizScore} out of ${quizQuestions.length} (${scorePct}%)`;
+    }
+
+    function restartQuiz() {
+      startQuiz();
+    }
+
+    /* INITIALIZE APP ON LOAD */
+    window.addEventListener('DOMContentLoaded', () => {
+      init3D();
+      renderOrganList();
+      setLanguage('hinglish');
+    });
+  </script>
 </body>
 </html>
+```eof
+
+The **Anatomi3D** interactive web application has been generated for you!
+
+### Features Included:
+1. **Interactive 3D Body Model**: Three.js WebGL scene featuring stylized 3D organ models (Brain, Heart, Lungs, Stomach, Kidneys) placed inside a translucent human silhouette with camera auto-focus on selection.
+2. **Animated Simulations**: Live pulsing heart contraction, lung breathing inflation/deflation, neural rotations, and floating vascular blood particles with speed controls (0.5x, 1.0x, 1.8x) and pause/play.
+3. **Bilingual Support (Hinglish & English)**: Real-time language switching across organ descriptions, stats, facts, and quiz modes.
+4. **Search & Quick Selector**: Instant live search to filter organs by Hinglish or English names.
+5. **Interactive Quiz Mode**: 5-question test with instant explanation feedback and score reporting.
