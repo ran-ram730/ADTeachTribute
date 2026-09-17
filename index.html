@@ -1,1303 +1,798 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Anatomi3D - 3D Interactive Human Anatomy Explorer</title>
-  
-  <!-- Tailwind CSS CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  
-  <!-- Font Awesome Icons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  
-  <!-- Google Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Happy Teachers' Day - Amardeep Patel Sir</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Poppins:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,800;1,600&display=swap" rel="stylesheet">
+    <!-- Canvas Confetti Library -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
-  <!-- Three.js & OrbitControls -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['Outfit', 'sans-serif'],
-            display: ['Space Grotesk', 'sans-serif'],
-          },
-          colors: {
-            cyanGlow: '#00f2fe',
-            pinkGlow: '#4facfe',
-            darkBg: '#0b0f19',
-            glassPanel: 'rgba(15, 23, 42, 0.75)',
-          }
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #311042 100%);
+            color: #f8fafc;
+            min-height: 100vh;
+            overflow-x: hidden;
         }
-      }
-    }
-  </script>
 
-  <style>
-    body {
-      font-family: 'Outfit', sans-serif;
-      background-color: #0b0f19;
-      color: #f8fafc;
-      overflow: hidden;
-    }
-    
-    .glass-panel {
-      background: rgba(15, 23, 42, 0.85);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-    }
+        .font-handwriting {
+            font-family: 'Caveat', cursive;
+        }
 
-    .glass-card {
-      background: rgba(30, 41, 59, 0.6);
-      backdrop-filter: blur(12px);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-    }
+        .font-serif-title {
+            font-family: 'Playfair Display', serif;
+        }
 
-    .glass-card:hover {
-      border-color: rgba(56, 189, 248, 0.4);
-      box-shadow: 0 0 20px rgba(56, 189, 248, 0.15);
-    }
+        /* Glassmorphism effects */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.07);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
 
-    /* Custom Scrollbar */
-    ::-webkit-scrollbar {
-      width: 6px;
-    }
-    ::-webkit-scrollbar-track {
-      background: rgba(15, 23, 42, 0.6);
-    }
-    ::-webkit-scrollbar-thumb {
-      background: rgba(56, 189, 248, 0.3);
-      border-radius: 4px;
-    }
-    ::-webkit-scrollbar-thumb:hover {
-      background: rgba(56, 189, 248, 0.6);
-    }
+        .glass-nav {
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
 
-    /* Glowing Pulse effect for Heart */
-    @keyframes heartPulse {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.08); }
-    }
+        /* Custom glow text & animations */
+        .glow-text {
+            text-shadow: 0 0 20px rgba(236, 72, 153, 0.6), 0 0 40px rgba(168, 85, 247, 0.4);
+        }
 
-    .pulse-animation {
-      animation: heartPulse 1.2s infinite ease-in-out;
-    }
-  </style>
+        .glow-gold {
+            text-shadow: 0 0 15px rgba(251, 191, 36, 0.6);
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-12px) rotate(2deg); }
+        }
+
+        .animate-float {
+            animation: float 5s ease-in-out infinite;
+        }
+
+        @keyframes pulse-slow {
+            0%, 100% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.05); opacity: 1; }
+        }
+
+        .animate-pulse-slow {
+            animation: pulse-slow 3s ease-in-out infinite;
+        }
+
+        /* Photo card frame hover effect */
+        .photo-card {
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .photo-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 30px rgba(236, 72, 153, 0.3);
+        }
+
+        /* Gold metallic frame accent */
+        .gold-border {
+            border: 2px solid transparent;
+            background-image: linear-gradient(#1e1b4b, #1e1b4b), linear-gradient(45deg, #f59e0b, #ec4899, #8b5cf6, #f59e0b);
+            background-origin: border-box;
+            background-clip: padding-box, border-box;
+        }
+
+        /* Floating background particles */
+        .bg-particle {
+            position: absolute;
+            border-radius: 50%;
+            pointer-events: none;
+            opacity: 0.25;
+            filter: blur(40px);
+        }
+    </style>
 </head>
+<body class="relative">
 
-<body class="h-screen w-screen relative flex flex-col select-none overflow-hidden">
+    <!-- Ambient Glowing Background Bubbles -->
+    <div class="bg-particle w-96 h-96 bg-purple-600 top-10 left-10 animate-pulse-slow"></div>
+    <div class="bg-particle w-96 h-96 bg-pink-600 top-1/3 right-10 animate-pulse-slow" style="animation-delay: 1.5s;"></div>
+    <div class="bg-particle w-96 h-96 bg-amber-500 bottom-20 left-1/4 animate-pulse-slow" style="animation-delay: 3s;"></div>
 
-  <!-- Top Navigation Bar -->
-  <header class="h-16 w-full glass-panel z-30 px-6 flex items-center justify-between border-b border-slate-800">
-    <div class="flex items-center gap-3">
-      <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center text-white shadow-lg shadow-cyan-500/30">
-        <i class="fa-solid fa-cube text-xl"></i>
-      </div>
-      <div>
-        <h1 class="text-xl font-bold font-display tracking-wide bg-gradient-to-r from-cyan-400 via-blue-400 to-indigo-300 bg-clip-text text-transparent">
-          Anatomi3D
-        </h1>
-        <p class="text-xs text-slate-400 font-medium" id="header-subtitle">3D Interactive Human Anatomy Explorer</p>
-      </div>
-    </div>
-
-    <!-- Mode Switcher Tabs -->
-    <div class="hidden md:flex bg-slate-900/80 p-1 rounded-xl border border-slate-800 gap-1">
-      <button id="tab-3d" onclick="switchView('3d')" class="px-4 py-1.5 text-xs font-semibold rounded-lg bg-cyan-500 text-slate-950 shadow-md transition-all flex items-center gap-2">
-        <i class="fa-solid fa-vr-cardboard"></i>
-        <span data-key="tab3d">3D Explorer</span>
-      </button>
-      <button id="tab-quiz" onclick="switchView('quiz')" class="px-4 py-1.5 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition-all flex items-center gap-2">
-        <i class="fa-solid fa-graduation-cap"></i>
-        <span data-key="tabQuiz">Quiz Mode</span>
-      </button>
-    </div>
-
-    <!-- Right Controls: Language Switcher & Info -->
-    <div class="flex items-center gap-3">
-      <!-- Language Switcher Button -->
-      <div class="bg-slate-900/90 p-1 rounded-xl border border-slate-800 flex items-center gap-1">
-        <button id="lang-hinglish" onclick="setLanguage('hinglish')" class="px-3 py-1 text-xs font-bold rounded-lg bg-slate-800 text-cyan-400 border border-cyan-500/30 transition-all flex items-center gap-1.5">
-          <span>🇮🇳</span> Hinglish
-        </button>
-        <button id="lang-en" onclick="setLanguage('en')" class="px-3 py-1 text-xs font-bold rounded-lg text-slate-400 hover:text-slate-200 transition-all flex items-center gap-1.5">
-          <span>🇬🇧</span> English
-        </button>
-      </div>
-
-      <!-- Reset Camera View Button -->
-      <button onclick="resetCameraView()" class="w-9 h-9 rounded-xl bg-slate-800/80 hover:bg-slate-700 border border-slate-700/50 flex items-center justify-center text-slate-300 hover:text-white transition-all" title="Reset View">
-        <i class="fa-solid fa-arrows-to-dot text-sm"></i>
-      </button>
-    </div>
-  </header>
-
-  <!-- Main Content Layout -->
-  <main class="flex-1 w-full relative flex overflow-hidden">
-
-    <!-- 3D Canvas View Container -->
-    <div id="canvas-container" class="absolute inset-0 w-full h-full bg-slate-950">
-      <!-- WebGL Canvas rendered by Three.js -->
-    </div>
-
-    <!-- Left Floating Controls & Organ Search Panel -->
-    <aside id="sidebar-panel" class="absolute left-4 top-4 bottom-4 w-80 glass-panel rounded-2xl z-20 flex flex-col p-4 shadow-2xl transition-all duration-300 transform">
-      
-      <!-- Search Box -->
-      <div class="relative mb-4">
-        <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-        <input type="text" id="organ-search" oninput="handleSearch(this.value)" placeholder="Organ search karein (Heart, Brain)..." 
-               class="w-full pl-9 pr-8 py-2 bg-slate-900/90 border border-slate-700/60 rounded-xl text-xs text-slate-200 focus:outline-none focus:border-cyan-400 transition-all placeholder:text-slate-500">
-        <button id="search-clear" onclick="clearSearch()" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white text-xs">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
-      </div>
-
-      <!-- Quick Organ Selector List -->
-      <div class="mb-3 flex items-center justify-between">
-        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider" data-key="selectOrganTitle">Select Organ</span>
-        <span class="text-[10px] bg-slate-800 text-cyan-400 px-2 py-0.5 rounded-full border border-cyan-500/20" id="organ-count">5 Organs</span>
-      </div>
-
-      <div class="flex-1 overflow-y-auto pr-1 space-y-2" id="organ-list">
-        <!-- Dynamically Populated Organ Cards -->
-      </div>
-
-      <!-- Simulation Controller Deck -->
-      <div class="mt-4 pt-3 border-t border-slate-800/80 bg-slate-900/40 p-3 rounded-xl border border-slate-800">
-        <div class="flex items-center justify-between mb-2">
-          <span class="text-xs font-bold text-slate-300 flex items-center gap-1.5">
-            <i class="fa-solid fa-sliders text-cyan-400"></i>
-            <span data-key="simControls">Simulation Speed</span>
-          </span>
-          <button id="toggle-sim-btn" onclick="toggleSimulation()" class="text-xs text-cyan-400 hover:text-cyan-300 font-semibold flex items-center gap-1">
-            <i class="fa-solid fa-pause text-[10px]" id="sim-icon"></i> <span id="sim-text">Pause</span>
-          </button>
-        </div>
-
-        <div class="flex items-center justify-between gap-2 bg-slate-950/80 p-1.5 rounded-lg border border-slate-800">
-          <button onclick="setSimSpeed(0.5)" id="speed-05" class="flex-1 py-1 text-[10px] font-bold rounded bg-slate-800 text-slate-300 hover:bg-slate-700 transition-all">0.5x</button>
-          <button onclick="setSimSpeed(1.0)" id="speed-10" class="flex-1 py-1 text-[10px] font-bold rounded bg-cyan-500 text-slate-950 font-bold shadow transition-all">1.0x</button>
-          <button onclick="setSimSpeed(1.8)" id="speed-18" class="flex-1 py-1 text-[10px] font-bold rounded bg-slate-800 text-slate-300 hover:bg-slate-700 transition-all">1.8x</button>
-        </div>
-      </div>
-    </aside>
-
-    <!-- Right Floating Organ Detail Modal / Drawer -->
-    <div id="organ-detail-card" class="absolute right-4 top-4 bottom-4 w-96 glass-panel rounded-2xl z-20 flex flex-col p-5 shadow-2xl transition-all duration-300 opacity-0 pointer-events-none transform translate-x-8">
-      <!-- Close Button -->
-      <button onclick="closeOrganDetail()" class="absolute top-4 right-4 w-8 h-8 rounded-xl bg-slate-800/80 hover:bg-slate-700 border border-slate-700 flex items-center justify-center text-slate-400 hover:text-white transition-all">
-        <i class="fa-solid fa-xmark text-sm"></i>
-      </button>
-
-      <!-- Organ Header Badge -->
-      <div class="flex items-center gap-3 mb-4">
-        <div id="organ-icon-bg" class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center text-white text-xl shadow-lg">
-          <i id="organ-icon" class="fa-solid fa-heart-pulse"></i>
-        </div>
-        <div>
-          <h2 id="organ-title" class="text-xl font-bold font-display text-white">Heart (Dil)</h2>
-          <p id="organ-category" class="text-xs text-cyan-400 font-medium">Circulatory System</p>
-        </div>
-      </div>
-
-      <!-- Scrollable Details -->
-      <div class="flex-1 overflow-y-auto pr-1 space-y-4">
-        
-        <!-- Live Animation Status Banner -->
-        <div class="bg-slate-900/80 p-3 rounded-xl border border-cyan-500/20 flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            <span class="relative flex h-2.5 w-2.5">
-              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
-              <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-cyan-500"></span>
-            </span>
-            <span class="text-xs font-semibold text-slate-300" data-key="activeSim">Active Simulation</span>
-          </div>
-          <span id="organ-sim-status" class="text-xs font-bold text-cyan-300 bg-cyan-950 px-2 py-0.5 rounded border border-cyan-800">72 BPM Rhythm</span>
-        </div>
-
-        <!-- Description Paragraph -->
-        <div>
-          <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1" data-key="aboutOrgan">How it Works (Kaam Kaise Karta Hai)</h3>
-          <p id="organ-desc" class="text-xs text-slate-300 leading-relaxed bg-slate-900/50 p-3 rounded-xl border border-slate-800/80">
-            Organ description text will appear here.
-          </p>
-        </div>
-
-        <!-- Key Metrics Grid -->
-        <div>
-          <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2" data-key="keyStats">Key Metrics & Stats</h3>
-          <div id="organ-stats-grid" class="grid grid-cols-2 gap-2">
-            <!-- Dynamic Metric Boxes -->
-          </div>
-        </div>
-
-        <!-- Did You Know / Fun Fact -->
-        <div class="bg-gradient-to-br from-indigo-950/60 to-purple-950/60 p-3.5 rounded-xl border border-indigo-500/30">
-          <div class="flex items-center gap-2 text-indigo-300 font-bold text-xs mb-1">
-            <i class="fa-solid fa-lightbulb text-amber-400"></i>
-            <span data-key="funFactTitle">Did You Know? (Kya Aap Jane Hain?)</span>
-          </div>
-          <p id="organ-fact" class="text-xs text-slate-200 leading-relaxed">
-            Interesting fact about this organ will be displayed here.
-          </p>
-        </div>
-
-      </div>
-
-      <!-- Action Button: Quiz on this Organ -->
-      <div class="pt-3 border-t border-slate-800 mt-2">
-        <button onclick="startSpecificQuiz()" class="w-full py-2.5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold text-xs rounded-xl shadow-lg shadow-cyan-500/20 transition-all flex items-center justify-center gap-2">
-          <i class="fa-solid fa-circle-question text-sm"></i>
-          <span data-key="testKnowledgeBtn">Test Knowledge on this Organ</span>
-        </button>
-      </div>
-    </div>
-
-    <!-- Floating 3D Interaction Guide Overlay -->
-    <div class="absolute bottom-4 left-1/2 -translate-x-1/2 glass-panel px-4 py-2 rounded-full z-10 flex items-center gap-4 text-xs text-slate-300 border border-slate-800 shadow-xl pointer-events-none">
-      <div class="flex items-center gap-1.5">
-        <i class="fa-solid fa-computer-mouse text-cyan-400"></i>
-        <span data-key="guideRotate">Left Click + Drag: Rotate</span>
-      </div>
-      <div class="w-px h-3 bg-slate-700"></div>
-      <div class="flex items-center gap-1.5">
-        <i class="fa-solid fa-arrows-up-down text-cyan-400"></i>
-        <span data-key="guideZoom">Scroll: Zoom</span>
-      </div>
-      <div class="w-px h-3 bg-slate-700"></div>
-      <div class="flex items-center gap-1.5">
-        <i class="fa-solid fa-hand-pointer text-cyan-400"></i>
-        <span data-key="guideClick">Click Organ to Inspect</span>
-      </div>
-    </div>
-
-    <!-- Quiz Mode Overlay Overlay Screen -->
-    <div id="quiz-view" class="absolute inset-0 z-40 glass-panel flex items-center justify-center p-6 hidden transition-all duration-300">
-      <div class="w-full max-w-xl bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl relative flex flex-col">
-        
-        <!-- Quiz Header -->
-        <div class="flex items-center justify-between pb-4 border-b border-slate-800 mb-6">
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center text-white">
-              <i class="fa-solid fa-brain text-lg"></i>
+    <!-- Sticky Glass Navbar -->
+    <header class="sticky top-0 z-50 glass-nav transition-all duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-amber-400 to-pink-500 flex items-center justify-center text-white shadow-lg">
+                    <i class="fa-solid font-bold text-xl fa-graduation-cap"></i>
+                </div>
+                <div>
+                    <span class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-amber-300 via-pink-400 to-purple-400">
+                        Amardeep Sir
+                    </span>
+                    <span class="block text-xs text-amber-300/80 font-medium">Class Teacher Special</span>
+                </div>
             </div>
-            <div>
-              <h2 class="text-lg font-bold font-display text-white" id="quiz-header-title">Anatomy Mastery Quiz</h2>
-              <p class="text-xs text-slate-400" id="quiz-progress-text">Question 1 of 5</p>
-            </div>
-          </div>
 
-          <button onclick="switchView('3d')" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center">
+            <!-- Navigation Links -->
+            <nav class="hidden md:flex items-center gap-8 text-sm font-medium">
+                <a href="#hero" class="hover:text-pink-400 transition-colors">Home</a>
+                <a href="#tribute" class="hover:text-pink-400 transition-colors">Tribute</a>
+                <a href="#gallery" class="hover:text-pink-400 transition-colors">Photo Memories</a>
+                <a href="#wishes" class="hover:text-pink-400 transition-colors">Student Wishes</a>
+                <a href="#founder" class="hover:text-pink-400 transition-colors">Founder</a>
+            </nav>
+
+            <!-- Sound & Trigger Buttons -->
+            <div class="flex items-center gap-3">
+                <button id="soundToggleBtn" onclick="toggleAudio()" class="px-3.5 py-2 rounded-full glass-card hover:bg-white/10 text-xs font-semibold flex items-center gap-2 border border-white/20 transition-all text-amber-300">
+                    <i id="soundIcon" class="fa-solid fa-music"></i>
+                    <span id="soundText">Play Music</span>
+                </button>
+                <button onclick="triggerConfetti()" class="px-4 py-2 rounded-full bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white text-xs font-bold shadow-lg shadow-pink-500/30 transform hover:scale-105 transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> Celebrate
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="relative z-10 space-y-24 pb-16">
+
+        <!-- Hero Section -->
+        <section id="hero" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 md:pt-20 text-center">
+            <!-- Badge -->
+            <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card border border-amber-400/30 text-amber-300 text-sm font-semibold mb-8 animate-float">
+                <i class="fa-solid fa-star text-amber-400"></i>
+                <span>Happy Teachers' Day 2026</span>
+                <i class="fa-solid fa-star text-amber-400"></i>
+            </div>
+
+            <!-- Main Heading -->
+            <h1 class="text-4xl sm:text-6xl md:text-7xl font-extrabold tracking-tight mb-6 font-serif-title leading-tight">
+                To Our Respected & Beloved <br>
+                <span class="bg-clip-text text-transparent bg-gradient-to-r from-amber-300 via-pink-400 to-purple-400 glow-text">
+                    Amardeep Patel Sir
+                </span>
+            </h1>
+
+            <p class="max-w-3xl mx-auto text-lg md:text-xl text-slate-300 font-light leading-relaxed mb-10">
+                "A teacher affects eternity; he can never tell where his influence stops." <br>
+                Thank you <strong class="text-amber-300 font-semibold">Amardeep Sir</strong> for being our guiding light, mentor, and continuous source of inspiration!
+            </p>
+
+            <!-- Action Buttons & Counter -->
+            <div class="flex flex-wrap items-center justify-center gap-4 mb-16">
+                <button onclick="addRespect()" class="px-8 py-4 rounded-full bg-gradient-to-r from-amber-400 via-pink-500 to-purple-600 hover:opacity-95 text-white font-bold text-lg shadow-xl shadow-purple-500/25 flex items-center gap-3 transform hover:-translate-y-1 transition-all">
+                    <i class="fa-solid fa-heart text-amber-200 animate-bounce"></i>
+                    <span>Send Respect & Love</span>
+                    <span id="respectCount" class="bg-white/20 text-white px-2.5 py-0.5 rounded-full text-sm">108</span>
+                </button>
+                <a href="#gallery" class="px-8 py-4 rounded-full glass-card hover:bg-white/10 text-white font-semibold text-lg border border-white/20 flex items-center gap-2 transition-all">
+                    <i class="fa-solid fa-images text-pink-400"></i>
+                    <span>View Memory Photo Gallery</span>
+                </a>
+            </div>
+
+            <!-- Sir Highlight Card -->
+            <div class="max-w-4xl mx-auto glass-card rounded-3xl p-8 md:p-12 gold-border shadow-2xl relative overflow-hidden">
+                <div class="absolute -right-10 -bottom-10 w-48 h-48 bg-pink-500/10 rounded-full blur-2xl"></div>
+                <div class="grid md:grid-cols-3 gap-8 items-center">
+                    <div class="relative mx-auto">
+                        <div class="w-44 h-44 rounded-2xl overflow-hidden shadow-2xl border-2 border-amber-400/50 p-1 bg-slate-900">
+                            <!-- Main Sir Photo fallback -->
+                            <img src="1.jpg" alt="Amardeep Patel Sir" onerror="this.src='https://placehold.co/400x400/311042/f59e0b?text=Amardeep+Sir';" class="w-full h-full object-cover rounded-xl transform hover:scale-110 transition-transform duration-500">
+                        </div>
+                        <div class="absolute -bottom-3 left-1/2 transform -translate-x-1/2 bg-amber-400 text-slate-900 font-bold px-3 py-1 rounded-full text-xs shadow-md uppercase tracking-wider">
+                            Class Teacher
+                        </div>
+                    </div>
+                    <div class="md:col-span-2 text-left space-y-4">
+                        <div class="inline-block px-3 py-1 bg-purple-500/20 text-purple-300 rounded-lg text-xs font-semibold">
+                            Special Dedication
+                        </div>
+                        <h2 class="text-2xl sm:text-3xl font-bold text-amber-300 font-serif-title">
+                            Shri Amardeep Patel Sir
+                        </h2>
+                        <p class="text-slate-300 text-sm leading-relaxed">
+                            Thank you for making learning so enjoyable, pushing us to achieve our absolute best, and always standing by us with wisdom, kindness, and patience. You are not just our class teacher, but our true life mentor.
+                        </p>
+                        <div class="flex flex-wrap gap-3 pt-2 text-xs font-medium">
+                            <span class="px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-pink-300">✨ Great Educator</span>
+                            <span class="px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-amber-300">🌟 Inspiring Leader</span>
+                            <span class="px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-cyan-300">💡 Always Supportive</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tribute & Qualities Section -->
+        <section id="tribute" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-5xl font-bold font-serif-title text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-pink-300 to-purple-300">
+                    Why Amardeep Sir Is Truly Special
+                </h2>
+                <p class="text-slate-400 mt-3 text-base max-w-xl mx-auto">
+                    The qualities that make Amardeep Patel Sir the favorite teacher for every student!
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Card 1 -->
+                <div class="glass-card rounded-2xl p-8 hover:border-amber-400/50 transition-all group">
+                    <div class="w-14 h-14 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-lightbulb"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-3">Unique Teaching Style</h3>
+                    <p class="text-slate-300 text-sm leading-relaxed">
+                        Amardeep Sir makes even the most difficult concepts simple and easy to understand with brilliant real-life examples and practical logic.
+                    </p>
+                </div>
+
+                <!-- Card 2 -->
+                <div class="glass-card rounded-2xl p-8 hover:border-pink-400/50 transition-all group">
+                    <div class="w-14 h-14 rounded-xl bg-pink-500/20 text-pink-400 flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-hand-holding-heart"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-3">Infinite Patience</h3>
+                    <p class="text-slate-300 text-sm leading-relaxed">
+                        No matter how many times a student asks a doubt, Sir explains with a warm smile and endless patience every single time.
+                    </p>
+                </div>
+
+                <!-- Card 3 -->
+                <div class="glass-card rounded-2xl p-8 hover:border-purple-400/50 transition-all group">
+                    <div class="w-14 h-14 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-rocket"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-3">Motivational Mentor</h3>
+                    <p class="text-slate-300 text-sm leading-relaxed">
+                        He always believes in our potential even when we doubt ourselves, encouraging us to aim high and achieve greatness.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Photo Gallery Section (12 Photos) -->
+        <section id="gallery" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <div class="inline-block px-4 py-1.5 rounded-full bg-pink-500/10 border border-pink-500/30 text-pink-300 text-xs font-bold uppercase tracking-widest mb-3">
+                    Classroom Memories & Moments
+                </div>
+                <h2 class="text-3xl md:text-5xl font-bold font-serif-title text-amber-300">
+                    Photo Memory Gallery
+                </h2>
+                <p class="text-slate-300 text-sm md:text-base mt-2">
+                    Golden memories captured with Amardeep Patel Sir (Click any image to expand)
+                </p>
+            </div>
+
+            <!-- Grid for 12 Photos -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                
+                <!-- Photo 1 -->
+                <div class="photo-card glass-card rounded-2xl overflow-hidden border border-white/10 group cursor-pointer" onclick="openLightbox(0)">
+                    <div class="relative h-60 overflow-hidden bg-slate-900">
+                        <img src="1.jpg" alt="Memory 1" onerror="this.src='https://placehold.co/500x500/1e1b4b/f59e0b?text=Photo+1+Amardeep+Sir';" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
+                            <span class="text-xs text-amber-300 font-semibold"><i class="fa-solid fa-magnifying-glass-plus mr-1"></i> Expand Memory #1</span>
+                        </div>
+                    </div>
+                    <div class="p-4 flex justify-between items-center bg-slate-900/60">
+                        <span class="text-sm font-semibold text-slate-200">Class Moment 1</span>
+                        <span class="text-xs px-2 py-1 rounded bg-amber-400/20 text-amber-300">1.jpg</span>
+                    </div>
+                </div>
+
+                <!-- Photo 2 -->
+                <div class="photo-card glass-card rounded-2xl overflow-hidden border border-white/10 group cursor-pointer" onclick="openLightbox(1)">
+                    <div class="relative h-60 overflow-hidden bg-slate-900">
+                        <img src="2.jpg" alt="Memory 2" onerror="this.src='https://placehold.co/500x500/311042/ec4899?text=Photo+2+Class+Fun';" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
+                            <span class="text-xs text-pink-300 font-semibold"><i class="fa-solid fa-magnifying-glass-plus mr-1"></i> Expand Memory #2</span>
+                        </div>
+                    </div>
+                    <div class="p-4 flex justify-between items-center bg-slate-900/60">
+                        <span class="text-sm font-semibold text-slate-200">Class Moment 2</span>
+                        <span class="text-xs px-2 py-1 rounded bg-pink-400/20 text-pink-300">2.jpg</span>
+                    </div>
+                </div>
+
+                <!-- Photo 3 -->
+                <div class="photo-card glass-card rounded-2xl overflow-hidden border border-white/10 group cursor-pointer" onclick="openLightbox(2)">
+                    <div class="relative h-60 overflow-hidden bg-slate-900">
+                        <img src="3.jpg" alt="Memory 3" onerror="this.src='https://placehold.co/500x500/0f172a/8b5cf6?text=Photo+3+Celebration';" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
+                            <span class="text-xs text-purple-300 font-semibold"><i class="fa-solid fa-magnifying-glass-plus mr-1"></i> Expand Memory #3</span>
+                        </div>
+                    </div>
+                    <div class="p-4 flex justify-between items-center bg-slate-900/60">
+                        <span class="text-sm font-semibold text-slate-200">Class Moment 3</span>
+                        <span class="text-xs px-2 py-1 rounded bg-purple-400/20 text-purple-300">3.jpg</span>
+                    </div>
+                </div>
+
+                <!-- Photo 4 -->
+                <div class="photo-card glass-card rounded-2xl overflow-hidden border border-white/10 group cursor-pointer" onclick="openLightbox(3)">
+                    <div class="relative h-60 overflow-hidden bg-slate-900">
+                        <img src="4.jpg" alt="Memory 4" onerror="this.src='https://placehold.co/500x500/1e1b4b/06b6d4?text=Photo+4+Group+Pic';" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
+                            <span class="text-xs text-cyan-300 font-semibold"><i class="fa-solid fa-magnifying-glass-plus mr-1"></i> Expand Memory #4</span>
+                        </div>
+                    </div>
+                    <div class="p-4 flex justify-between items-center bg-slate-900/60">
+                        <span class="text-sm font-semibold text-slate-200">Class Moment 4</span>
+                        <span class="text-xs px-2 py-1 rounded bg-cyan-400/20 text-cyan-300">4.jpg</span>
+                    </div>
+                </div>
+
+                <!-- Photo 5 -->
+                <div class="photo-card glass-card rounded-2xl overflow-hidden border border-white/10 group cursor-pointer" onclick="openLightbox(4)">
+                    <div class="relative h-60 overflow-hidden bg-slate-900">
+                        <img src="5.jpg" alt="Memory 5" onerror="this.src='https://placehold.co/500x500/311042/f59e0b?text=Photo+5+Sir+Teaching';" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
+                            <span class="text-xs text-amber-300 font-semibold"><i class="fa-solid fa-magnifying-glass-plus mr-1"></i> Expand Memory #5</span>
+                        </div>
+                    </div>
+                    <div class="p-4 flex justify-between items-center bg-slate-900/60">
+                        <span class="text-sm font-semibold text-slate-200">Class Moment 5</span>
+                        <span class="text-xs px-2 py-1 rounded bg-amber-400/20 text-amber-300">5.jpg</span>
+                    </div>
+                </div>
+
+                <!-- Photo 6 -->
+                <div class="photo-card glass-card rounded-2xl overflow-hidden border border-white/10 group cursor-pointer" onclick="openLightbox(5)">
+                    <div class="relative h-60 overflow-hidden bg-slate-900">
+                        <img src="6.jpg" alt="Memory 6" onerror="this.src='https://placehold.co/500x500/0f172a/ec4899?text=Photo+6+Teachers+Day';" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
+                            <span class="text-xs text-pink-300 font-semibold"><i class="fa-solid fa-magnifying-glass-plus mr-1"></i> Expand Memory #6</span>
+                        </div>
+                    </div>
+                    <div class="p-4 flex justify-between items-center bg-slate-900/60">
+                        <span class="text-sm font-semibold text-slate-200">Class Moment 6</span>
+                        <span class="text-xs px-2 py-1 rounded bg-pink-400/20 text-pink-300">6.jpg</span>
+                    </div>
+                </div>
+
+                <!-- Photo 7 -->
+                <div class="photo-card glass-card rounded-2xl overflow-hidden border border-white/10 group cursor-pointer" onclick="openLightbox(6)">
+                    <div class="relative h-60 overflow-hidden bg-slate-900">
+                        <img src="7.jpg" alt="Memory 7" onerror="this.src='https://placehold.co/500x500/1e1b4b/10b981?text=Photo+7+Guidance';" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
+                            <span class="text-xs text-emerald-300 font-semibold"><i class="fa-solid fa-magnifying-glass-plus mr-1"></i> Expand Memory #7</span>
+                        </div>
+                    </div>
+                    <div class="p-4 flex justify-between items-center bg-slate-900/60">
+                        <span class="text-sm font-semibold text-slate-200">Class Moment 7</span>
+                        <span class="text-xs px-2 py-1 rounded bg-emerald-400/20 text-emerald-300">7.jpg</span>
+                    </div>
+                </div>
+
+                <!-- Photo 8 -->
+                <div class="photo-card glass-card rounded-2xl overflow-hidden border border-white/10 group cursor-pointer" onclick="openLightbox(7)">
+                    <div class="relative h-60 overflow-hidden bg-slate-900">
+                        <img src="8.jpg" alt="Memory 8" onerror="this.src='https://placehold.co/500x500/311042/8b5cf6?text=Photo+8+Smile';" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
+                            <span class="text-xs text-purple-300 font-semibold"><i class="fa-solid fa-magnifying-glass-plus mr-1"></i> Expand Memory #8</span>
+                        </div>
+                    </div>
+                    <div class="p-4 flex justify-between items-center bg-slate-900/60">
+                        <span class="text-sm font-semibold text-slate-200">Class Moment 8</span>
+                        <span class="text-xs px-2 py-1 rounded bg-purple-400/20 text-purple-300">8.jpg</span>
+                    </div>
+                </div>
+
+                <!-- Photo 9 -->
+                <div class="photo-card glass-card rounded-2xl overflow-hidden border border-white/10 group cursor-pointer" onclick="openLightbox(8)">
+                    <div class="relative h-60 overflow-hidden bg-slate-900">
+                        <img src="9.jpg" alt="Memory 9" onerror="this.src='https://placehold.co/500x500/0f172a/f59e0b?text=Photo+9+Function';" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
+                            <span class="text-xs text-amber-300 font-semibold"><i class="fa-solid fa-magnifying-glass-plus mr-1"></i> Expand Memory #9</span>
+                        </div>
+                    </div>
+                    <div class="p-4 flex justify-between items-center bg-slate-900/60">
+                        <span class="text-sm font-semibold text-slate-200">Class Moment 9</span>
+                        <span class="text-xs px-2 py-1 rounded bg-amber-400/20 text-amber-300">9.jpg</span>
+                    </div>
+                </div>
+
+                <!-- Photo 10 -->
+                <div class="photo-card glass-card rounded-2xl overflow-hidden border border-white/10 group cursor-pointer" onclick="openLightbox(9)">
+                    <div class="relative h-60 overflow-hidden bg-slate-900">
+                        <img src="10.jpg" alt="Memory 10" onerror="this.src='https://placehold.co/500x500/1e1b4b/ec4899?text=Photo+10+Inspiration';" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
+                            <span class="text-xs text-pink-300 font-semibold"><i class="fa-solid fa-magnifying-glass-plus mr-1"></i> Expand Memory #10</span>
+                        </div>
+                    </div>
+                    <div class="p-4 flex justify-between items-center bg-slate-900/60">
+                        <span class="text-sm font-semibold text-slate-200">Class Moment 10</span>
+                        <span class="text-xs px-2 py-1 rounded bg-pink-400/20 text-pink-300">10.jpg</span>
+                    </div>
+                </div>
+
+                <!-- Photo 11 -->
+                <div class="photo-card glass-card rounded-2xl overflow-hidden border border-white/10 group cursor-pointer" onclick="openLightbox(10)">
+                    <div class="relative h-60 overflow-hidden bg-slate-900">
+                        <img src="11.jpg" alt="Memory 11" onerror="this.src='https://placehold.co/500x500/311042/38bdf8?text=Photo+11+Classroom';" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
+                            <span class="text-xs text-sky-300 font-semibold"><i class="fa-solid fa-magnifying-glass-plus mr-1"></i> Expand Memory #11</span>
+                        </div>
+                    </div>
+                    <div class="p-4 flex justify-between items-center bg-slate-900/60">
+                        <span class="text-sm font-semibold text-slate-200">Class Moment 11</span>
+                        <span class="text-xs px-2 py-1 rounded bg-sky-400/20 text-sky-300">11.jpg</span>
+                    </div>
+                </div>
+
+                <!-- Photo 12 -->
+                <div class="photo-card glass-card rounded-2xl overflow-hidden border border-white/10 group cursor-pointer" onclick="openLightbox(11)">
+                    <div class="relative h-60 overflow-hidden bg-slate-900">
+                        <img src="12.jpg" alt="Memory 12" onerror="this.src='https://placehold.co/500x500/0f172a/f43f5e?text=Photo+12+Best+Teacher';" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
+                            <span class="text-xs text-rose-300 font-semibold"><i class="fa-solid fa-magnifying-glass-plus mr-1"></i> Expand Memory #12</span>
+                        </div>
+                    </div>
+                    <div class="p-4 flex justify-between items-center bg-slate-900/60">
+                        <span class="text-sm font-semibold text-slate-200">Class Moment 12</span>
+                        <span class="text-xs px-2 py-1 rounded bg-rose-400/20 text-rose-300">12.jpg</span>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Student Wishes & Note Wall -->
+        <section id="wishes" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="glass-card rounded-3xl p-8 md:p-12 border border-white/10">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+                    <div>
+                        <h2 class="text-3xl font-bold font-serif-title text-amber-300">
+                            Student Wish Wall
+                        </h2>
+                        <p class="text-slate-300 text-sm mt-1">
+                            Heartfelt messages and wishes for Amardeep Sir from the whole class
+                        </p>
+                    </div>
+                    <button onclick="toggleWishModal()" class="px-6 py-3 rounded-xl bg-amber-400 hover:bg-amber-500 text-slate-900 font-bold text-sm shadow-lg flex items-center gap-2 self-start md:self-auto transition-all">
+                        <i class="fa-solid fa-pen-to-square"></i> Add Your Wish
+                    </button>
+                </div>
+
+                <!-- Messages Grid -->
+                <div id="wishesContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    
+                    <!-- Preloaded Wish 1 -->
+                    <div class="bg-white/5 border border-white/10 rounded-2xl p-6 relative">
+                        <i class="fa-solid fa-quote-left text-3xl text-amber-400/30 absolute top-4 right-4"></i>
+                        <p class="text-slate-200 text-sm italic mb-4 font-handwriting text-xl leading-snug">
+                            "Happy Teachers' Day Amardeep Sir! Thank you for always making studies so fun and inspiring us to reach for the stars."
+                        </p>
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full bg-gradient-to-br from-pink-400 to-purple-600 flex items-center justify-center font-bold text-xs text-white">
+                                V
+                            </div>
+                            <div>
+                                <span class="text-xs font-bold text-amber-300 block">Vinay</span>
+                                <span class="text-[10px] text-slate-400">Class Student</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Preloaded Wish 2 -->
+                    <div class="bg-white/5 border border-white/10 rounded-2xl p-6 relative">
+                        <i class="fa-solid fa-quote-left text-3xl text-pink-400/30 absolute top-4 right-4"></i>
+                        <p class="text-slate-200 text-sm italic mb-4 font-handwriting text-xl leading-snug">
+                            "Sir, your motivation before every test changed my whole perspective. You are truly the best class teacher ever!"
+                        </p>
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center font-bold text-xs text-white">
+                                A
+                            </div>
+                            <div>
+                                <span class="text-xs font-bold text-pink-300 block">Amit & Friends</span>
+                                <span class="text-[10px] text-slate-400">Classmates</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Preloaded Wish 3 -->
+                    <div class="bg-white/5 border border-white/10 rounded-2xl p-6 relative">
+                        <i class="fa-solid fa-quote-left text-3xl text-purple-400/30 absolute top-4 right-4"></i>
+                        <p class="text-slate-200 text-sm italic mb-4 font-handwriting text-xl leading-snug">
+                            "A good teacher can inspire hope, ignite imagination, and instill a love of learning. Thank you Amardeep Patel Sir!"
+                        </p>
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-400 to-cyan-500 flex items-center justify-center font-bold text-xs text-white">
+                                C
+                            </div>
+                            <div>
+                                <span class="text-xs font-bold text-purple-300 block">Entire Class</span>
+                                <span class="text-[10px] text-slate-400">With Love</span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- Founder Credits Section -->
+        <section id="founder" class="max-w-4xl mx-auto px-4 text-center">
+            <div class="glass-card rounded-3xl p-8 md:p-10 border border-amber-400/30 relative overflow-hidden">
+                <div class="w-16 h-16 rounded-full bg-gradient-to-tr from-amber-400 to-pink-500 mx-auto flex items-center justify-center text-slate-900 text-2xl font-bold mb-4 shadow-lg">
+                    <i class="fa-solid fa-code"></i>
+                </div>
+                <div class="uppercase tracking-widest text-xs font-bold text-amber-300 mb-2">
+                    Website Founder & Creator
+                </div>
+                <h3 class="text-3xl font-extrabold text-white font-serif-title mb-3">
+                    Created By: <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 to-pink-400">Vinay</span>
+                </h3>
+                <p class="text-slate-300 text-sm max-w-lg mx-auto leading-relaxed mb-6">
+                    This website was specially created and designed by <strong class="text-amber-300">Vinay</strong> on behalf of all class students to express our deepest gratitude and respect for <strong class="text-pink-300">Amardeep Patel Sir</strong> on Teachers' Day.
+                </p>
+                <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-xs text-slate-300">
+                    <i class="fa-solid fa-heart text-pink-500"></i> Dedicated with Love to Amardeep Patel Sir
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Lightbox Modal for Photo Gallery -->
+    <div id="lightboxModal" class="fixed inset-0 z-50 bg-black/90 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <button onclick="closeLightbox()" class="absolute top-6 right-6 text-white/80 hover:text-white text-3xl z-50 transition-colors">
             <i class="fa-solid fa-xmark"></i>
-          </button>
+        </button>
+
+        <button onclick="prevPhoto()" class="absolute left-4 top-1/2 -translate-y-1/2 text-white/80 hover:text-amber-400 text-3xl p-3 bg-white/10 rounded-full backdrop-blur-sm transition-all">
+            <i class="fa-solid fa-chevron-left"></i>
+        </button>
+
+        <button onclick="nextPhoto()" class="absolute right-4 top-1/2 -translate-y-1/2 text-white/80 hover:text-amber-400 text-3xl p-3 bg-white/10 rounded-full backdrop-blur-sm transition-all">
+            <i class="fa-solid fa-chevron-right"></i>
+        </button>
+
+        <div class="max-w-4xl max-h-[85vh] flex flex-col items-center">
+            <img id="lightboxImg" src="" alt="Expanded View" class="max-w-full max-h-[75vh] object-contain rounded-xl border-2 border-amber-400/40 shadow-2xl">
+            <div id="lightboxCaption" class="mt-4 text-amber-300 font-semibold text-lg text-center"></div>
         </div>
-
-        <!-- Question Box -->
-        <div id="quiz-question-container" class="space-y-4">
-          <p id="quiz-question" class="text-sm md:text-base font-semibold text-slate-100 leading-snug">
-            Question prompt will appear here?
-          </p>
-
-          <!-- Options Grid -->
-          <div id="quiz-options" class="space-y-2.5">
-            <!-- Dynamic Options -->
-          </div>
-
-          <!-- Explanation Box -->
-          <div id="quiz-explanation" class="hidden p-3 bg-slate-800/80 border border-slate-700 rounded-xl text-xs text-slate-300 leading-relaxed">
-            <span class="font-bold text-cyan-400 block mb-1">Explanation / Samjhein:</span>
-            <span id="explanation-text">Explanation text goes here.</span>
-          </div>
-
-          <!-- Next Button -->
-          <div class="flex justify-end pt-2">
-            <button id="quiz-next-btn" onclick="nextQuestion()" class="hidden px-5 py-2 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs rounded-xl transition-all flex items-center gap-2">
-              <span data-key="nextQuestion">Next Question</span>
-              <i class="fa-solid fa-arrow-right"></i>
-            </button>
-          </div>
-        </div>
-
-        <!-- Quiz Completed Result Screen -->
-        <div id="quiz-result-container" class="hidden text-center py-6 space-y-4">
-          <div class="w-20 h-20 rounded-full bg-cyan-500/10 border-2 border-cyan-400 mx-auto flex items-center justify-center text-cyan-400 text-3xl">
-            <i class="fa-solid fa-trophy"></i>
-          </div>
-          <h3 class="text-xl font-bold font-display text-white" data-key="quizDoneTitle">Quiz Completed!</h3>
-          <p class="text-sm text-slate-300" id="quiz-score-text">You scored 4 out of 5</p>
-
-          <div class="flex items-center justify-center gap-3 pt-4">
-            <button onclick="restartQuiz()" class="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-white font-semibold text-xs rounded-xl transition-all">
-              <i class="fa-solid fa-rotate-right mr-1.5"></i> <span data-key="retryQuiz">Try Again</span>
-            </button>
-            <button onclick="switchView('3d')" class="px-5 py-2.5 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs rounded-xl transition-all">
-              <i class="fa-solid fa-cube mr-1.5"></i> <span data-key="backTo3d">Back to 3D View</span>
-            </button>
-          </div>
-        </div>
-
-      </div>
     </div>
 
-  </main>
-
-  <!-- Application Script Logic -->
-  <script>
-    /* ====================================================================
-       1. DATA STRUCTURE (Bilingual: Hinglish & English)
-       ==================================================================== */
-    const translations = {
-      hinglish: {
-        headerSubtitle: "3D Interactive Sharir Vigyan Explorer",
-        tab3d: "3D Explorer",
-        tabQuiz: "Quiz Mode",
-        selectOrganTitle: "Organ Select Karein",
-        simControls: "Simulation Speed",
-        activeSim: "Active Simulation",
-        aboutOrgan: "Kaam Kaise Karta Hai",
-        keyStats: "Mukhya Stats & Data",
-        funFactTitle: "Kya Aap Jante Hain?",
-        testKnowledgeBtn: "Is Organ Par Quiz Dein",
-        guideRotate: "Left Click + Drag: Ghumayein",
-        guideZoom: "Scroll: Zoom Karein",
-        guideClick: "Organ Par Click Karein",
-        nextQuestion: "Agle Sawaal Par Jayein",
-        quizDoneTitle: "Quiz Poora Ho Gaya!",
-        retryQuiz: "Dobara Koshish Karein",
-        backTo3d: "3D Model Par Wapas Jayein"
-      },
-      en: {
-        headerSubtitle: "3D Interactive Human Anatomy Explorer",
-        tab3d: "3D Explorer",
-        tabQuiz: "Quiz Mode",
-        selectOrganTitle: "Select Organ",
-        simControls: "Simulation Speed",
-        activeSim: "Active Simulation",
-        aboutOrgan: "How It Works",
-        keyStats: "Key Metrics & Stats",
-        funFactTitle: "Did You Know?",
-        testKnowledgeBtn: "Test Knowledge on this Organ",
-        guideRotate: "Left Click + Drag: Rotate",
-        guideZoom: "Scroll: Zoom",
-        guideClick: "Click Organ to Inspect",
-        nextQuestion: "Next Question",
-        quizDoneTitle: "Quiz Completed!",
-        retryQuiz: "Try Again",
-        backTo3d: "Back to 3D View"
-      }
-    };
-
-    const organData = [
-      {
-        id: "brain",
-        name: { en: "Brain", hinglish: "Brain (Dimag)" },
-        category: { en: "Nervous System", hinglish: "Tantrika Tantra (Nervous System)" },
-        color: 0x38bdf8,
-        position: { x: 0, y: 2.2, z: 0 },
-        simStatus: { en: "Neural Pulses Firing", hinglish: "Neural Signals Active" },
-        desc: {
-          en: "The brain is the command center of the human body. It controls thoughts, memory, emotions, motor skills, vision, breathing, and every process that regulates our body.",
-          hinglish: "Dimag aapki poori body ka master control unit hai. Yeh memory, emotions, thought process, aur sabhi organs ke signals ko real-time manage karta hai."
-        },
-        stats: [
-          { label: { en: "Neurons", hinglish: "Tantrika Koshika" }, val: "~86 Billion" },
-          { label: { en: "Power Used", hinglish: "Energy Use" }, val: "~20 Watts" },
-          { label: { en: "Avg Weight", hinglish: "Avg Wazan" }, val: "~1.4 kg" },
-          { label: { en: "Memory Capacity", hinglish: "Memory Capacity" }, val: "~2.5 Petabytes" }
-        ],
-        fact: {
-          en: "Your brain generates enough electricity to power a small low-wattage LED bulb while awake!",
-          hinglish: "Aapka dimag awake rehne par itni electricity produce karta hai ki ek chhota LED bulb jal sake!"
-        },
-        icon: "fa-brain"
-      },
-      {
-        id: "heart",
-        name: { en: "Heart", hinglish: "Heart (Dil)" },
-        category: { en: "Circulatory System", hinglish: "Rakt Sancharan Tantra" },
-        color: 0xef4444,
-        position: { x: -0.2, y: 0.8, z: 0.1 },
-        simStatus: { en: "72 BPM Cardiac Cycle", hinglish: "72 BPM Dhadkan Rhythm" },
-        desc: {
-          en: "The heart is a muscular organ that pumps blood continuously through blood vessels. It delivers oxygen and essential nutrients to every tissue in the body.",
-          hinglish: "Dil (Heart) ek muscular pump hai jo continuous blood circulate karta hai, poore sharir me oxygen aur nutrients pahunchane ke liye."
-        },
-        stats: [
-          { label: { en: "Heart Rate", hinglish: "Heartbeat" }, val: "60-100 BPM" },
-          { label: { en: "Daily Beats", hinglish: "Din me Dhadkan" }, val: "~100,000" },
-          { label: { en: "Pump Volume", hinglish: "Rakt Volume" }, val: "~7,500 L/day" },
-          { label: { en: "Chambers", hinglish: "Chambers" }, val: "4 (Atria & Ventricles)" }
-        ],
-        fact: {
-          en: "The heart creates enough pressure to squirt blood up to 30 feet across a room!",
-          hinglish: "Dil itna pressure generate kar sakta hai ki blood lagbhag 30 feet door tak pump ho sakta hai!"
-        },
-        icon: "fa-heart-pulse"
-      },
-      {
-        id: "lungs",
-        name: { en: "Lungs", hinglish: "Lungs (Fephde)" },
-        category: { en: "Respiratory System", hinglish: "Shwasan Tantra" },
-        color: 0x06b6d4,
-        position: { x: 0, y: 0.8, z: -0.1 },
-        simStatus: { en: "Breathing Cycle (16 BPM)", hinglish: "Saans Lene Ka Rhythm" },
-        desc: {
-          en: "The lungs take in oxygen from the air during inhalation and release carbon dioxide during exhalation, keeping our bloodstream oxygen-rich.",
-          hinglish: "Fephde (Lungs) respiration (saans lene) ke liye responsible hain. Ye air se oxygen absorb karke blood me bhejte hain aur carbon dioxide nikalte hain."
-        },
-        stats: [
-          { label: { en: "Breath Rate", hinglish: "Breaths/Min" }, val: "12-20 bpm" },
-          { label: { en: "Surface Area", hinglish: "Surface Area" }, val: "~70 m²" },
-          { label: { en: "Daily Capacity", hinglish: "Daily Air Volume" }, val: "~11,000 Liters" },
-          { label: { en: "Main Muscle", hinglish: "Main Muscle" }, val: "Diaphragm" }
-        ],
-        fact: {
-          en: "The surface area of both human lungs combined is roughly equal to a full tennis court!",
-          hinglish: "Dono fephdon ka total surface area failaya jaye toh ek tennis court ke barabar hoga!"
-        },
-        icon: "fa-lungs"
-      },
-      {
-        id: "stomach",
-        name: { en: "Stomach", hinglish: "Stomach (Pet)" },
-        category: { en: "Digestive System", hinglish: "Pachan Tantra" },
-        color: 0xeab308,
-        position: { x: -0.2, y: -0.2, z: 0.1 },
-        simStatus: { en: "Gastric Juice Motility", hinglish: "Pachan Acid Wave" },
-        desc: {
-          en: "The stomach breaks down food mechanically and chemically using gastric juices containing powerful Hydrochloric Acid (HCl) and enzymes.",
-          hinglish: "Pet (Stomach) khane ko break karne aur digest karne ka kaam karta hai, strong gastric acid (HCl) aur enzymes ka use karke."
-        },
-        stats: [
-          { label: { en: "Acidity (pH)", hinglish: "Acid pH Level" }, val: "1.5 - 3.5" },
-          { label: { en: "Capacity", hinglish: "Kshamta" }, val: "1.5 Liters" },
-          { label: { en: "Digestion Time", hinglish: "Pachan Samay" }, val: "2 - 4 Hours" },
-          { label: { en: "Key Acid", hinglish: "Mukhya Acid" }, val: "Hydrochloric (HCl)" }
-        ],
-        fact: {
-          en: "Stomach acid is strong enough to dissolve metal razor blades, which is why the stomach lining replaces itself every few days!",
-          hinglish: "Stomach ka acid razor blade ko bhi dissolve kar sakta hai, isiliye stomach ki andaruni lining har 3-4 din me regenerate hoti hai!"
-        },
-        icon: "fa-utensils"
-      },
-      {
-        id: "kidneys",
-        name: { en: "Kidneys", hinglish: "Kidneys (Gurde)" },
-        category: { en: "Excretory System", hinglish: "Utssarjan Tantra" },
-        color: 0xa855f7,
-        position: { x: 0, y: -0.6, z: -0.2 },
-        simStatus: { en: "Blood Filtration Active", hinglish: "Rakt Safai Active" },
-        desc: {
-          en: "Kidneys filter waste products and excess fluid from the blood to form urine, while balancing essential electrolytes and regulating blood pressure.",
-          hinglish: "Gurde (Kidneys) blood me se waste products aur extra fluid filter karke urine banate hain aur blood pressure balance rakhte hain."
-        },
-        stats: [
-          { label: { en: "Filtered Blood", hinglish: "Filtered Blood" }, val: "~180 L/day" },
-          { label: { en: "Filtering Units", hinglish: "Nephrons Count" }, val: "~1 Million/Kidney" },
-          { label: { en: "Organ Count", hinglish: "Sankhya" }, val: "2 Paired Kidneys" },
-          { label: { en: "Urine Formed", hinglish: "Urine Output" }, val: "~1.5 L/day" }
-        ],
-        fact: {
-          en: "All the blood in your body passes through your kidneys roughly 40 times every single day!",
-          hinglish: "Aapka poora blood din me lagbhag 40 baar kidneys se hokar guzarta hai safai ke liye!"
-        },
-        icon: "fa-filter"
-      }
-    ];
-
-    const quizQuestions = [
-      {
-        q: {
-          en: "Which organ pumps oxygen-rich blood throughout the human body?",
-          hinglish: "Inme se kaun sa organ poori body me oxygenated blood pump karta hai?"
-        },
-        options: [
-          { text: { en: "Brain", hinglish: "Dimag (Brain)" } },
-          { text: { en: "Heart", hinglish: "Dil (Heart)" } },
-          { text: { en: "Lungs", hinglish: "Fephde (Lungs)" } },
-          { text: { en: "Kidneys", hinglish: "Gurde (Kidneys)" } }
-        ],
-        correct: 1,
-        exp: {
-          en: "The heart pumps blood continuously delivering oxygen and nutrients throughout the body.",
-          hinglish: "Dil (Heart) ek muscular pump hai jo continuous blood circulate karke oxygen pahunchata hai."
-        }
-      },
-      {
-        q: {
-          en: "Which organ is responsible for absorbing oxygen from inhaled air into the blood?",
-          hinglish: "Inme se kaun sa organ air se oxygen absorb karke blood me bhejta hai?"
-        },
-        options: [
-          { text: { en: "Lungs", hinglish: "Fephde (Lungs)" } },
-          { text: { en: "Stomach", hinglish: "Pet (Stomach)" } },
-          { text: { en: "Liver", hinglish: "Liver" } },
-          { text: { en: "Brain", hinglish: "Dimag" } }
-        ],
-        correct: 0,
-        exp: {
-          en: "Lungs take in oxygen from inhaled air during respiration.",
-          hinglish: "Fephde saans lene ke dooraan oxygen absorb karke carbon dioxide bahar nikalte hain."
-        }
-      },
-      {
-        q: {
-          en: "Approximately how much of the body's total energy does the brain consume?",
-          hinglish: "Dimag (Brain) body ki lagbhag kitni energy consume karta hai?"
-        },
-        options: [
-          { text: { en: "5%", hinglish: "5%" } },
-          { text: { en: "10%", hinglish: "10%" } },
-          { text: { en: "20%", hinglish: "20%" } },
-          { text: { en: "50%", hinglish: "50%" } }
-        ],
-        correct: 2,
-        exp: {
-          en: "Even though the brain accounts for ~2% of body weight, it consumes about 20% of its energy.",
-          hinglish: "Dimag chhota hone ke bawajood sharir ki lagbhag 20% energy aur oxygen consume karta hai."
-        }
-      },
-      {
-        q: {
-          en: "Which highly acidic fluid helps digest food inside the stomach?",
-          hinglish: "Stomach me khana digest karne ke liye kaun sa strong acid hota hai?"
-        },
-        options: [
-          { text: { en: "Nitric Acid", hinglish: "Nitric Acid" } },
-          { text: { en: "Hydrochloric Acid (HCl)", hinglish: "Hydrochloric Acid (HCl)" } },
-          { text: { en: "Sulfuric Acid", hinglish: "Sulfuric Acid" } },
-          { text: { en: "Acetic Acid", hinglish: "Acetic Acid" } }
-        ],
-        correct: 1,
-        exp: {
-          en: "Hydrochloric acid (HCl) in the stomach breaks down food and kills harmful bacteria.",
-          hinglish: "Stomach me Hydrochloric acid (HCl) hota hai jo food digest karta hai aur bacteria marta hai."
-        }
-      },
-      {
-        q: {
-          en: "How many liters of blood do the kidneys filter roughly every day?",
-          hinglish: "Kidneys 1 din me lagbhag kitna blood filter karti hain?"
-        },
-        options: [
-          { text: { en: "10 Liters", hinglish: "10 Liters" } },
-          { text: { en: "50 Liters", hinglish: "50 Liters" } },
-          { text: { en: "180 Liters", hinglish: "180 Liters" } },
-          { text: { en: "500 Liters", hinglish: "500 Liters" } }
-        ],
-        correct: 2,
-        exp: {
-          en: "Kidneys filter about 180 liters of blood daily to produce roughly 1.5 liters of urine.",
-          hinglish: "Gurde har din lagbhag 180 Liters blood filter karke toxic material urine ke dwara nikalte hain."
-        }
-      }
-    ];
-
-    /* ====================================================================
-       2. GLOBAL STATE APP MANAGEMENT
-       ==================================================================== */
-    let currentLang = 'hinglish';
-    let selectedOrganId = null;
-    let simSpeed = 1.0;
-    let isSimPlaying = true;
-    let activeView = '3d'; // '3d' or 'quiz'
-
-    // Quiz State
-    let currentQuizIdx = 0;
-    let quizScore = 0;
-    let selectedOptionIdx = null;
-
-    /* ====================================================================
-       3. THREE.JS 3D SCENE & ANIMATION SETUP
-       ==================================================================== */
-    let scene, camera, renderer, controls, raycaster, mouse;
-    let organMeshes = {};
-    let particlesMesh, neuralParticles;
-    let mannequinMesh;
-    let clock = new THREE.Clock();
-
-    function init3D() {
-      const container = document.getElementById('canvas-container');
-      
-      // Scene
-      scene = new THREE.Scene();
-      scene.background = new THREE.Color(0x0b0f19);
-      scene.fog = new THREE.FogExp2(0x0b0f19, 0.08);
-
-      // Camera
-      camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 100);
-      camera.position.set(0, 0.5, 7.5);
-
-      // Renderer
-      renderer = new THREE.WebGLRenderer({ antialias: true });
-      renderer.setSize(container.clientWidth, container.clientHeight);
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-      renderer.shadowMap.enabled = true;
-      container.appendChild(renderer.domElement);
-
-      // Orbit Controls
-      controls = new THREE.OrbitControls(camera, renderer.domElement);
-      controls.enableDamping = true;
-      controls.dampingFactor = 0.05;
-      controls.maxDistance = 12;
-      controls.minDistance = 3;
-      controls.maxPolarAngle = Math.PI / 2 + 0.1;
-
-      // Lights
-      const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
-      scene.add(ambientLight);
-
-      const dirLight1 = new THREE.DirectionalLight(0x38bdf8, 1.5);
-      dirLight1.position.set(5, 10, 7);
-      scene.add(dirLight1);
-
-      const dirLight2 = new THREE.DirectionalLight(0xef4444, 1.2);
-      dirLight2.position.set(-5, -5, -5);
-      scene.add(dirLight2);
-
-      const pointLight = new THREE.PointLight(0x00f2fe, 1.5, 10);
-      pointLight.position.set(0, 1, 2);
-      scene.add(pointLight);
-
-      // Create Transparent Body Silhouette Mannequin
-      createBodyMannequin();
-
-      // Create 3D Organ Models
-      createOrgans();
-
-      // Create Vascular & Neural Particle Systems
-      createParticles();
-
-      // Raycaster for Mouse Interactivity
-      raycaster = new THREE.Raycaster();
-      mouse = new THREE.Vector2();
-
-      // Events
-      window.addEventListener('resize', onWindowResize);
-      renderer.domElement.addEventListener('pointerdown', onPointerClick);
-      renderer.domElement.addEventListener('pointermove', onPointerMove);
-
-      // Start Animation Loop
-      animate();
-    }
-
-    /* Create Stylized Outer Body Mannequin Wireframe */
-    function createBodyMannequin() {
-      const mannequinGroup = new THREE.Group();
-
-      // Head Mesh
-      const headGeo = new THREE.SphereGeometry(0.75, 32, 32);
-      headGeo.scale(0.85, 1.1, 0.9);
-      headGeo.translate(0, 2.2, 0);
-
-      // Torso Mesh
-      const torsoGeo = new THREE.CylinderGeometry(0.9, 0.65, 2.8, 32);
-      torsoGeo.translate(0, 0, 0);
-
-      // Neck Mesh
-      const neckGeo = new THREE.CylinderGeometry(0.35, 0.45, 0.5, 16);
-      neckGeo.translate(0, 1.35, 0);
-
-      // Combine Geometries
-      const mat = new THREE.MeshPhysicalMaterial({
-        color: 0x1e293b,
-        transparent: true,
-        opacity: 0.18,
-        wireframe: false,
-        roughness: 0.2,
-        transmission: 0.6,
-        thickness: 0.5
-      });
-
-      const wireframeMat = new THREE.MeshBasicMaterial({
-        color: 0x38bdf8,
-        wireframe: true,
-        transparent: true,
-        opacity: 0.08
-      });
-
-      const head = new THREE.Mesh(headGeo, mat);
-      const headWire = new THREE.Mesh(headGeo, wireframeMat);
-      const torso = new THREE.Mesh(torsoGeo, mat);
-      const torsoWire = new THREE.Mesh(torsoGeo, wireframeMat);
-      const neck = new THREE.Mesh(neckGeo, mat);
-
-      mannequinGroup.add(head, headWire, torso, torsoWire, neck);
-      scene.add(mannequinGroup);
-      mannequinMesh = mannequinGroup;
-    }
-
-    /* Create Organ Geometries */
-    function createOrgans() {
-      // 1. BRAIN (Two Folded Hemispheres)
-      const brainGroup = new THREE.Group();
-      const brainMat = new THREE.MeshStandardMaterial({
-        color: 0x38bdf8,
-        roughness: 0.3,
-        metalness: 0.2,
-        emissive: 0x0284c7,
-        emissiveIntensity: 0.2
-      });
-
-      const leftHemi = new THREE.Mesh(new THREE.SphereGeometry(0.45, 24, 24), brainMat);
-      leftHemi.scale.set(0.7, 0.9, 1.1);
-      leftHemi.position.set(-0.16, 2.25, 0);
-
-      const rightHemi = new THREE.Mesh(new THREE.SphereGeometry(0.45, 24, 24), brainMat);
-      rightHemi.scale.set(0.7, 0.9, 1.1);
-      rightHemi.position.set(0.16, 2.25, 0);
-
-      brainGroup.add(leftHemi, rightHemi);
-      brainGroup.userData = { id: "brain" };
-      scene.add(brainGroup);
-      organMeshes["brain"] = brainGroup;
-
-      // 2. HEART (Anatomical Heart Shape + Aorta Arch)
-      const heartGroup = new THREE.Group();
-      const heartMat = new THREE.MeshStandardMaterial({
-        color: 0xef4444,
-        roughness: 0.4,
-        metalness: 0.1,
-        emissive: 0x991b1b,
-        emissiveIntensity: 0.3
-      });
-
-      const mainHeart = new THREE.Mesh(new THREE.SphereGeometry(0.38, 24, 24), heartMat);
-      mainHeart.scale.set(0.85, 1.2, 0.85);
-
-      // Aorta Arch
-      const aortaGeo = new THREE.TorusGeometry(0.18, 0.06, 12, 24, Math.PI * 1.2);
-      const aortaMat = new THREE.MeshStandardMaterial({ color: 0xd97706, roughness: 0.5 });
-      const aorta = new THREE.Mesh(aortaGeo, aortaMat);
-      aorta.rotation.x = Math.PI / 2;
-      aorta.position.set(0, 0.25, 0);
-
-      heartGroup.add(mainHeart, aorta);
-      heartGroup.position.set(-0.25, 0.8, 0.1);
-      heartGroup.userData = { id: "heart" };
-      scene.add(heartGroup);
-      organMeshes["heart"] = heartGroup;
-
-      // 3. LUNGS (Left and Right Lungs)
-      const lungsGroup = new THREE.Group();
-      const lungMat = new THREE.MeshStandardMaterial({
-        color: 0x06b6d4,
-        transparent: true,
-        opacity: 0.85,
-        roughness: 0.3,
-        emissive: 0x0e7490,
-        emissiveIntensity: 0.2
-      });
-
-      const leftLung = new THREE.Mesh(new THREE.ConeGeometry(0.35, 1.1, 20), lungMat);
-      leftLung.rotation.z = -0.15;
-      leftLung.position.set(-0.48, 0.75, -0.05);
-
-      const rightLung = new THREE.Mesh(new THREE.ConeGeometry(0.38, 1.15, 20), lungMat);
-      rightLung.rotation.z = 0.15;
-      rightLung.position.set(0.48, 0.75, -0.05);
-
-      lungsGroup.add(leftLung, rightLung);
-      lungsGroup.userData = { id: "lungs" };
-      scene.add(lungsGroup);
-      organMeshes["lungs"] = lungsGroup;
-
-      // 4. STOMACH (J-Shaped Anatomical Organ)
-      const stomachGroup = new THREE.Group();
-      const stomachMat = new THREE.MeshStandardMaterial({
-        color: 0xeab308,
-        roughness: 0.4,
-        emissive: 0x854d0e,
-        emissiveIntensity: 0.2
-      });
-
-      const stomachBody = new THREE.Mesh(new THREE.TorusGeometry(0.25, 0.14, 16, 24, Math.PI * 1.1), stomachMat);
-      stomachBody.rotation.z = -Math.PI / 3;
-      stomachGroup.add(stomachBody);
-      stomachGroup.position.set(-0.2, -0.15, 0.1);
-      stomachGroup.userData = { id: "stomach" };
-      scene.add(stomachGroup);
-      organMeshes["stomach"] = stomachGroup;
-
-      // 5. KIDNEYS (Paired Bean Shapes)
-      const kidneysGroup = new THREE.Group();
-      const kidneyMat = new THREE.MeshStandardMaterial({
-        color: 0xa855f7,
-        roughness: 0.3,
-        emissive: 0x6b21a8,
-        emissiveIntensity: 0.3
-      });
-
-      const leftKidney = new THREE.Mesh(new THREE.SphereGeometry(0.2, 16, 16), kidneyMat);
-      leftKidney.scale.set(0.7, 1.2, 0.8);
-      leftKidney.position.set(-0.4, -0.65, -0.15);
-
-      const rightKidney = new THREE.Mesh(new THREE.SphereGeometry(0.2, 16, 16), kidneyMat);
-      rightKidney.scale.set(0.7, 1.2, 0.8);
-      rightKidney.position.set(0.4, -0.65, -0.15);
-
-      kidneysGroup.add(leftKidney, rightKidney);
-      kidneysGroup.userData = { id: "kidneys" };
-      scene.add(kidneysGroup);
-      organMeshes["kidneys"] = kidneysGroup;
-    }
-
-    /* Floating Blood Vascular Particles & Neural Sparks */
-    function createParticles() {
-      const particleCount = 180;
-      const geometry = new THREE.BufferGeometry();
-      const positions = new Float32Array(particleCount * 3);
-      const colors = new Float32Array(particleCount * 3);
-
-      for (let i = 0; i < particleCount; i++) {
-        positions[i * 3] = (Math.random() - 0.5) * 1.6;
-        positions[i * 3 + 1] = (Math.random() - 0.5) * 3.5;
-        positions[i * 3 + 2] = (Math.random() - 0.5) * 1.2;
-
-        colors[i * 3] = 0.2;
-        colors[i * 3 + 1] = 0.8;
-        colors[i * 3 + 2] = 1.0;
-      }
-
-      geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-      geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-
-      const pMaterial = new THREE.PointsMaterial({
-        size: 0.04,
-        vertexColors: true,
-        transparent: true,
-        opacity: 0.6,
-        blending: THREE.AdditiveBlending
-      });
-
-      particlesMesh = new THREE.Points(geometry, pMaterial);
-      scene.add(particlesMesh);
-    }
-
-    /* Real-Time Render Animation Loop */
-    function animate() {
-      requestAnimationFrame(animate);
-
-      const delta = clock.getDelta();
-      const elapsedTime = clock.getElapsedTime() * simSpeed;
-
-      controls.update();
-
-      if (isSimPlaying) {
-        // 1. Heart Beat Animation (Contraction & Expansion Lub-Dub Rhythm)
-        if (organMeshes["heart"]) {
-          const pulse = 1 + Math.sin(elapsedTime * 6) * 0.08 + Math.sin(elapsedTime * 12) * 0.03;
-          organMeshes["heart"].scale.set(pulse, pulse, pulse);
-        }
-
-        // 2. Lungs Breathing Simulation (Expansion & Contraction)
-        if (organMeshes["lungs"]) {
-          const breath = 1 + Math.sin(elapsedTime * 2) * 0.09;
-          organMeshes["lungs"].children[0].scale.set(breath, breath, breath);
-          organMeshes["lungs"].children[1].scale.set(breath, breath, breath);
-        }
-
-        // 3. Brain Neural Pulse Rotation
-        if (organMeshes["brain"]) {
-          organMeshes["brain"].rotation.y = Math.sin(elapsedTime * 0.5) * 0.05;
-        }
-
-        // 4. Stomach Digest Wave
-        if (organMeshes["stomach"]) {
-          organMeshes["stomach"].rotation.y = Math.sin(elapsedTime * 1.5) * 0.08;
-        }
-
-        // 5. Particles Drift Motion
-        if (particlesMesh) {
-          const positions = particlesMesh.geometry.attributes.position.array;
-          for (let i = 0; i < positions.length; i += 3) {
-            positions[i + 1] += Math.sin(elapsedTime + i) * 0.002;
-            if (positions[i + 1] > 2.8) positions[i + 1] = -1.2;
-          }
-          particlesMesh.geometry.attributes.position.needsUpdate = true;
-        }
-      }
-
-      renderer.render(scene, camera);
-    }
-
-    /* Window Resize Handler */
-    function onWindowResize() {
-      const container = document.getElementById('canvas-container');
-      camera.aspect = container.clientWidth / container.clientHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(container.clientWidth, container.clientHeight);
-    }
-
-    /* Raycasting / Mouse Interaction */
-    function onPointerMove(event) {
-      const rect = renderer.domElement.getBoundingClientRect();
-      mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-      mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-
-      raycaster.setFromCamera(mouse, camera);
-      const intersects = raycaster.intersectObjects(scene.children, true);
-
-      let foundOrgan = false;
-      for (let hit of intersects) {
-        let parent = hit.object.parent;
-        while (parent && !parent.userData.id) {
-          parent = parent.parent;
-        }
-        if (parent && parent.userData.id) {
-          document.body.style.cursor = 'pointer';
-          foundOrgan = true;
-          break;
-        }
-      }
-      if (!foundOrgan) {
-        document.body.style.cursor = 'default';
-      }
-    }
-
-    function onPointerClick(event) {
-      const rect = renderer.domElement.getBoundingClientRect();
-      mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-      mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-
-      raycaster.setFromCamera(mouse, camera);
-      const intersects = raycaster.intersectObjects(scene.children, true);
-
-      for (let hit of intersects) {
-        let parent = hit.object.parent;
-        while (parent && !parent.userData.id) {
-          parent = parent.parent;
-        }
-        if (parent && parent.userData.id) {
-          selectOrgan(parent.userData.id);
-          break;
-        }
-      }
-    }
-
-    /* Camera Smooth Focus on Selected Organ */
-    function focusCameraOn(organId) {
-      const organ = organData.find(o => o.id === organId);
-      if (!organ) return;
-
-      const targetPos = organ.position;
-      
-      // Animate Camera Focus
-      let startTime = null;
-      const startCamPos = camera.position.clone();
-      const targetCamPos = new THREE.Vector3(targetPos.x, targetPos.y, targetPos.z + 3.2);
-
-      function step(timestamp) {
-        if (!startTime) startTime = timestamp;
-        const progress = Math.min((timestamp - startTime) / 600, 1);
-        
-        camera.position.lerpVectors(startCamPos, targetCamPos, progress);
-        controls.target.set(targetPos.x, targetPos.y, targetPos.z);
-        
-        if (progress < 1) {
-          requestAnimationFrame(step);
-        }
-      }
-      requestAnimationFrame(step);
-    }
-
-    function resetCameraView() {
-      controls.target.set(0, 0, 0);
-      camera.position.set(0, 0.5, 7.5);
-      closeOrganDetail();
-    }
-
-    /* ====================================================================
-       4. UI LOGIC, SEARCH, BILINGUAL & MODALS
-       ==================================================================== */
-    function setLanguage(lang) {
-      currentLang = lang;
-
-      // Update Active Button Styling
-      document.getElementById('lang-hinglish').className = lang === 'hinglish' 
-        ? "px-3 py-1 text-xs font-bold rounded-lg bg-slate-800 text-cyan-400 border border-cyan-500/30 transition-all flex items-center gap-1.5"
-        : "px-3 py-1 text-xs font-bold rounded-lg text-slate-400 hover:text-slate-200 transition-all flex items-center gap-1.5";
-
-      document.getElementById('lang-en').className = lang === 'en' 
-        ? "px-3 py-1 text-xs font-bold rounded-lg bg-slate-800 text-cyan-400 border border-cyan-500/30 transition-all flex items-center gap-1.5"
-        : "px-3 py-1 text-xs font-bold rounded-lg text-slate-400 hover:text-slate-200 transition-all flex items-center gap-1.5";
-
-      // Update Text Elements with Data Attributes
-      document.querySelectorAll('[data-key]').forEach(el => {
-        const key = el.getAttribute('data-key');
-        if (translations[lang][key]) {
-          el.innerText = translations[lang][key];
-        }
-      });
-
-      document.getElementById('header-subtitle').innerText = translations[lang].headerSubtitle;
-
-      // Refresh Organ List & Details
-      renderOrganList();
-      if (selectedOrganId) {
-        renderOrganDetail(selectedOrganId);
-      }
-      if (activeView === 'quiz') {
-        renderQuizQuestion();
-      }
-    }
-
-    function renderOrganList(filterText = "") {
-      const listContainer = document.getElementById('organ-list');
-      listContainer.innerHTML = "";
-
-      const filtered = organData.filter(organ => {
-        const nameMatch = organ.name[currentLang].toLowerCase().includes(filterText.toLowerCase()) ||
-                          organ.name.en.toLowerCase().includes(filterText.toLowerCase());
-        return nameMatch;
-      });
-
-      document.getElementById('organ-count').innerText = `${filtered.length} Organs`;
-
-      filtered.forEach(organ => {
-        const isSelected = selectedOrganId === organ.id;
-        const card = document.createElement('div');
-        card.className = `glass-card p-3 rounded-xl cursor-pointer flex items-center justify-between transition-all ${
-          isSelected ? 'border-cyan-400 bg-slate-800/90 shadow-lg shadow-cyan-500/10' : ''
-        }`;
-        card.onclick = () => selectOrgan(organ.id);
-
-        card.innerHTML = `
-          <div class="flex items-center gap-3">
-            <div class="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-cyan-400 text-sm border border-slate-700">
-              <i class="fa-solid ${organ.icon}"></i>
+    <!-- Add Wish Modal -->
+    <div id="wishModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="glass-card bg-slate-900 border border-white/20 rounded-3xl p-8 max-w-md w-full relative">
+            <button onclick="toggleWishModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+
+            <h3 class="text-2xl font-bold text-amber-300 mb-4 font-serif-title">Write a Wish for Sir</h3>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs text-slate-300 mb-1 font-semibold">Your Name</label>
+                    <input type="text" id="studentNameInput" placeholder="Enter your name" class="w-full px-4 py-2.5 rounded-xl bg-white/10 border border-white/20 text-white placeholder-slate-400 focus:outline-none focus:border-amber-400 text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs text-slate-300 mb-1 font-semibold">Your Wish / Message</label>
+                    <textarea id="studentWishInput" rows="4" placeholder="Write your heartfelt message for Amardeep Patel Sir..." class="w-full px-4 py-2.5 rounded-xl bg-white/10 border border-white/20 text-white placeholder-slate-400 focus:outline-none focus:border-amber-400 text-sm"></textarea>
+                </div>
+                <button onclick="submitWish()" class="w-full py-3 rounded-xl bg-gradient-to-r from-amber-400 to-pink-500 hover:opacity-90 text-slate-900 font-bold text-sm shadow-lg transition-all">
+                    Post Message
+                </button>
             </div>
-            <div>
-              <h4 class="text-xs font-bold text-slate-100">${organ.name[currentLang]}</h4>
-              <p class="text-[10px] text-slate-400">${organ.category[currentLang]}</p>
-            </div>
-          </div>
-          <i class="fa-solid fa-chevron-right text-xs text-slate-500"></i>
-        `;
-        listContainer.appendChild(card);
-      });
-    }
+        </div>
+    </div>
 
-    function selectOrgan(organId) {
-      selectedOrganId = organId;
-      renderOrganList(document.getElementById('organ-search').value);
-      renderOrganDetail(organId);
-      focusCameraOn(organId);
-    }
+    <!-- Footer -->
+    <footer class="border-t border-white/10 bg-slate-950/80 py-8 text-center text-xs text-slate-400 relative z-10">
+        <div class="max-w-7xl mx-auto px-4 space-y-2">
+            <p class="text-sm text-slate-300 font-medium">
+                Happy Teachers' Day to <strong class="text-amber-300">Amardeep Patel Sir</strong> ❤️
+            </p>
+            <p>
+                Founder & Developer: <span class="text-pink-400 font-bold">Vinay</span>
+            </p>
+            <p class="text-[10px] text-slate-500">
+                &copy; 2026 Class Special Teachers Day Tribute. All rights reserved.
+            </p>
+        </div>
+    </footer>
 
-    function renderOrganDetail(organId) {
-      const organ = organData.find(o => o.id === organId);
-      if (!organ) return;
+    <script>
+        // Photo List (1.jpg to 12.jpg)
+        const photos = [
+            { src: '1.jpg', title: 'Memory 1 - Amardeep Patel Sir' },
+            { src: '2.jpg', title: 'Memory 2 - Classroom Moments' },
+            { src: '3.jpg', title: 'Memory 3 - Special Celebrations' },
+            { src: '4.jpg', title: 'Memory 4 - Group Photo' },
+            { src: '5.jpg', title: 'Memory 5 - Teaching Session' },
+            { src: '6.jpg', title: 'Memory 6 - Happy Moments' },
+            { src: '7.jpg', title: 'Memory 7 - Sir & Students' },
+            { src: '8.jpg', title: 'Memory 8 - Smiles & Learning' },
+            { src: '9.jpg', title: 'Memory 9 - Annual Function' },
+            { src: '10.jpg', title: 'Memory 10 - Inspiring Guidance' },
+            { src: '11.jpg', title: 'Memory 11 - Class Fun' },
+            { src: '12.jpg', title: 'Memory 12 - Best Class Teacher Ever' }
+        ];
 
-      const detailCard = document.getElementById('organ-detail-card');
-      detailCard.classList.remove('opacity-0', 'pointer-events-none', 'translate-x-8');
-      detailCard.classList.add('opacity-100', 'pointer-events-auto', 'translate-x-0');
+        let currentPhotoIndex = 0;
 
-      document.getElementById('organ-title').innerText = organ.name[currentLang];
-      document.getElementById('organ-category').innerText = organ.category[currentLang];
-      document.getElementById('organ-icon').className = `fa-solid ${organ.icon}`;
-      document.getElementById('organ-sim-status').innerText = organ.simStatus[currentLang];
-      document.getElementById('organ-desc').innerText = organ.desc[currentLang];
-      document.getElementById('organ-fact').innerText = organ.fact[currentLang];
-
-      // Populate Stats Grid
-      const statsGrid = document.getElementById('organ-stats-grid');
-      statsGrid.innerHTML = "";
-
-      organ.stats.forEach(stat => {
-        const box = document.createElement('div');
-        box.className = "bg-slate-900/80 p-2.5 rounded-xl border border-slate-800/90";
-        box.innerHTML = `
-          <span class="text-[10px] text-slate-400 block">${stat.label[currentLang]}</span>
-          <span class="text-xs font-bold text-cyan-300 font-display">${stat.val}</span>
-        `;
-        statsGrid.appendChild(box);
-      });
-    }
-
-    function closeOrganDetail() {
-      selectedOrganId = null;
-      renderOrganList(document.getElementById('organ-search').value);
-
-      const detailCard = document.getElementById('organ-detail-card');
-      detailCard.classList.add('opacity-0', 'pointer-events-none', 'translate-x-8');
-      detailCard.classList.remove('opacity-100', 'pointer-events-auto', 'translate-x-0');
-    }
-
-    function handleSearch(val) {
-      const clearBtn = document.getElementById('search-clear');
-      if (val.trim().length > 0) {
-        clearBtn.classList.remove('hidden');
-      } else {
-        clearBtn.classList.add('hidden');
-      }
-      renderOrganList(val);
-    }
-
-    function clearSearch() {
-      const input = document.getElementById('organ-search');
-      input.value = "";
-      handleSearch("");
-    }
-
-    function toggleSimulation() {
-      isSimPlaying = !isSimPlaying;
-      const simText = document.getElementById('sim-text');
-      const simIcon = document.getElementById('sim-icon');
-
-      if (isSimPlaying) {
-        simText.innerText = "Pause";
-        simIcon.className = "fa-solid fa-pause text-[10px]";
-      } else {
-        simText.innerText = "Play";
-        simIcon.className = "fa-solid fa-play text-[10px]";
-      }
-    }
-
-    function setSimSpeed(speed) {
-      simSpeed = speed;
-      ['05', '10', '18'].forEach(s => {
-        const btn = document.getElementById(`speed-${s}`);
-        btn.className = "flex-1 py-1 text-[10px] font-bold rounded bg-slate-800 text-slate-300 hover:bg-slate-700 transition-all";
-      });
-
-      let activeId = 'speed-10';
-      if (speed === 0.5) activeId = 'speed-05';
-      if (speed === 1.8) activeId = 'speed-18';
-
-      document.getElementById(activeId).className = "flex-1 py-1 text-[10px] font-bold rounded bg-cyan-500 text-slate-950 shadow transition-all";
-    }
-
-    function switchView(view) {
-      activeView = view;
-      const quizView = document.getElementById('quiz-view');
-      const tab3d = document.getElementById('tab-3d');
-      const tabQuiz = document.getElementById('tab-quiz');
-
-      if (view === 'quiz') {
-        quizView.classList.remove('hidden');
-        tabQuiz.className = "px-4 py-1.5 text-xs font-semibold rounded-lg bg-cyan-500 text-slate-950 shadow-md transition-all flex items-center gap-2";
-        tab3d.className = "px-4 py-1.5 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition-all flex items-center gap-2";
-        startQuiz();
-      } else {
-        quizView.classList.add('hidden');
-        tab3d.className = "px-4 py-1.5 text-xs font-semibold rounded-lg bg-cyan-500 text-slate-950 shadow-md transition-all flex items-center gap-2";
-        tabQuiz.className = "px-4 py-1.5 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition-all flex items-center gap-2";
-      }
-    }
-
-    /* ====================================================================
-       5. QUIZ INTERACTIVE ENGINE
-       ==================================================================== */
-    function startQuiz() {
-      currentQuizIdx = 0;
-      quizScore = 0;
-      selectedOptionIdx = null;
-
-      document.getElementById('quiz-question-container').classList.remove('hidden');
-      document.getElementById('quiz-result-container').classList.add('hidden');
-      renderQuizQuestion();
-    }
-
-    function startSpecificQuiz() {
-      switchView('quiz');
-    }
-
-    function renderQuizQuestion() {
-      const qData = quizQuestions[currentQuizIdx];
-      selectedOptionIdx = null;
-
-      document.getElementById('quiz-progress-text').innerText = `Question ${currentQuizIdx + 1} of ${quizQuestions.length}`;
-      document.getElementById('quiz-question').innerText = qData.q[currentLang];
-
-      const optionsBox = document.getElementById('quiz-options');
-      optionsBox.innerHTML = "";
-
-      document.getElementById('quiz-explanation').classList.add('hidden');
-      document.getElementById('quiz-next-btn').classList.add('hidden');
-
-      qData.options.forEach((opt, idx) => {
-        const btn = document.createElement('button');
-        btn.className = "w-full p-3 rounded-xl bg-slate-800/90 hover:bg-slate-700/80 border border-slate-700/80 text-left text-xs font-medium text-slate-200 transition-all flex items-center justify-between";
-        btn.onclick = () => selectOption(idx);
-        btn.innerHTML = `
-          <span>${opt.text[currentLang]}</span>
-          <i class="fa-regular fa-circle text-slate-500 text-xs"></i>
-        `;
-        optionsBox.appendChild(btn);
-      });
-    }
-
-    function selectOption(idx) {
-      if (selectedOptionIdx !== null) return; // Prevent re-selection
-      selectedOptionIdx = idx;
-
-      const qData = quizQuestions[currentQuizIdx];
-      const isCorrect = idx === qData.correct;
-      if (isCorrect) quizScore++;
-
-      const optionsBox = document.getElementById('quiz-options');
-      const buttons = optionsBox.children;
-
-      for (let i = 0; i < buttons.length; i++) {
-        if (i === qData.correct) {
-          buttons[i].className = "w-full p-3 rounded-xl bg-emerald-950/80 border border-emerald-500 text-left text-xs font-semibold text-emerald-300 flex items-center justify-between";
-          buttons[i].innerHTML = `<span>${qData.options[i].text[currentLang]}</span> <i class="fa-solid fa-circle-check text-emerald-400"></i>`;
-        } else if (i === idx && !isCorrect) {
-          buttons[i].className = "w-full p-3 rounded-xl bg-rose-950/80 border border-rose-500 text-left text-xs font-semibold text-rose-300 flex items-center justify-between";
-          buttons[i].innerHTML = `<span>${qData.options[i].text[currentLang]}</span> <i class="fa-solid fa-circle-xmark text-rose-400"></i>`;
-        } else {
-          buttons[i].className = "w-full p-3 rounded-xl bg-slate-900/50 border border-slate-800 text-left text-xs text-slate-500 opacity-60 flex items-center justify-between";
+        // Lightbox Functions
+        function openLightbox(index) {
+            currentPhotoIndex = index;
+            updateLightboxContent();
+            document.getElementById('lightboxModal').classList.remove('hidden');
         }
-      }
 
-      // Show Explanation
-      const expBox = document.getElementById('quiz-explanation');
-      expBox.classList.remove('hidden');
-      document.getElementById('explanation-text').innerText = qData.exp[currentLang];
+        function closeLightbox() {
+            document.getElementById('lightboxModal').classList.add('hidden');
+        }
 
-      // Show Next Button
-      document.getElementById('quiz-next-btn').classList.remove('hidden');
-    }
+        function updateLightboxContent() {
+            const img = document.getElementById('lightboxImg');
+            const caption = document.getElementById('lightboxCaption');
+            const current = photos[currentPhotoIndex];
+            
+            img.src = current.src;
+            img.onerror = function() {
+                this.src = `https://placehold.co/800x600/311042/f59e0b?text=Memory+${currentPhotoIndex + 1}+Amardeep+Sir`;
+            };
+            caption.textContent = current.title;
+        }
 
-    function nextQuestion() {
-      currentQuizIdx++;
-      if (currentQuizIdx < quizQuestions.length) {
-        renderQuizQuestion();
-      } else {
-        showQuizResults();
-      }
-    }
+        function nextPhoto() {
+            currentPhotoIndex = (currentPhotoIndex + 1) % photos.length;
+            updateLightboxContent();
+        }
 
-    function showQuizResults() {
-      document.getElementById('quiz-question-container').classList.add('hidden');
-      document.getElementById('quiz-result-container').classList.remove('hidden');
+        function prevPhoto() {
+            currentPhotoIndex = (currentPhotoIndex - 1 + photos.length) % photos.length;
+            updateLightboxContent();
+        }
 
-      const scorePct = Math.round((quizScore / quizQuestions.length) * 100);
-      document.getElementById('quiz-score-text').innerText = currentLang === 'hinglish' 
-        ? `Aapne ${quizQuestions.length} me se ${quizScore} sawaal sahi kiye (${scorePct}%)`
-        : `You scored ${quizScore} out of ${quizQuestions.length} (${scorePct}%)`;
-    }
+        // Close lightbox with Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeLightbox();
+            if (e.key === 'ArrowRight') nextPhoto();
+            if (e.key === 'ArrowLeft') prevPhoto();
+        });
 
-    function restartQuiz() {
-      startQuiz();
-    }
+        // Respect Counter
+        let count = 108;
+        function addRespect() {
+            count++;
+            document.getElementById('respectCount').textContent = count;
+            triggerConfetti();
+        }
 
-    /* INITIALIZE APP ON LOAD */
-    window.addEventListener('DOMContentLoaded', () => {
-      init3D();
-      renderOrganList();
-      setLanguage('hinglish');
-    });
-  </script>
+        // Confetti Generator
+        function triggerConfetti() {
+            if (typeof confetti === 'function') {
+                confetti({
+                    particleCount: 80,
+                    spread: 70,
+                    origin: { y: 0.6 }
+                });
+            }
+        }
+
+        // Wish Modal Toggle
+        function toggleWishModal() {
+            const modal = document.getElementById('wishModal');
+            modal.classList.toggle('hidden');
+        }
+
+        function submitWish() {
+            const name = document.getElementById('studentNameInput').value.trim();
+            const wish = document.getElementById('studentWishInput').value.trim();
+
+            if (!name || !wish) {
+                alert('Please enter both your name and wish!');
+                return;
+            }
+
+            const container = document.getElementById('wishesContainer');
+            const wishCard = document.createElement('div');
+            wishCard.className = 'bg-white/5 border border-white/10 rounded-2xl p-6 relative animate-pulse-slow';
+            wishCard.innerHTML = `
+                <i class="fa-solid fa-quote-left text-3xl text-amber-400/30 absolute top-4 right-4"></i>
+                <p class="text-slate-200 text-sm italic mb-4 font-handwriting text-xl leading-snug">
+                    "${wish}"
+                </p>
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-full bg-gradient-to-br from-amber-400 to-pink-500 flex items-center justify-center font-bold text-xs text-white uppercase">
+                        ${name.charAt(0)}
+                    </div>
+                    <div>
+                        <span class="text-xs font-bold text-amber-300 block">${name}</span>
+                        <span class="text-[10px] text-slate-400">Student</span>
+                    </div>
+                </div>
+            `;
+
+            container.prepend(wishCard);
+            document.getElementById('studentNameInput').value = '';
+            document.getElementById('studentWishInput').value = '';
+            toggleWishModal();
+            triggerConfetti();
+        }
+
+        // Web Audio Synthesizer for Background Melody
+        let audioCtx = null;
+        let isPlaying = false;
+        let soundTimer = null;
+
+        function toggleAudio() {
+            const soundIcon = document.getElementById('soundIcon');
+            const soundText = document.getElementById('soundText');
+
+            if (!isPlaying) {
+                startMelody();
+                soundIcon.className = "fa-solid fa-volume-high text-green-400";
+                soundText.textContent = "Music Playing";
+                isPlaying = true;
+            } else {
+                stopMelody();
+                soundIcon.className = "fa-solid fa-music text-amber-300";
+                soundText.textContent = "Play Music";
+                isPlaying = false;
+            }
+        }
+
+        function playNote(freq, duration) {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+
+            osc.type = 'sine';
+            osc.frequency.value = freq;
+
+            gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            osc.start();
+            osc.stop(audioCtx.currentTime + duration);
+        }
+
+        function startMelody() {
+            const notes = [261.63, 293.66, 329.63, 349.23, 392.00, 440.00, 493.88, 523.25];
+            let step = 0;
+
+            soundTimer = setInterval(() => {
+                const note = notes[step % notes.length];
+                playNote(note, 0.6);
+                step++;
+            }, 500);
+        }
+
+        function stopMelody() {
+            if (soundTimer) clearInterval(soundTimer);
+        }
+
+        // Initial launch confetti
+        window.onload = function() {
+            setTimeout(triggerConfetti, 800);
+        };
+    </script>
 </body>
 </html>
